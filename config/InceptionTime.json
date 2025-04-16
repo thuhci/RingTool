@@ -17,7 +17,7 @@
         "input_type": ["ir-filtered", "red-filtered","ax-filtered","ay-filtered","az-filtered"],
         "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
         "shuffle": true,
-        "batch_size": 32,
+        "batch_size": 16,
         "quality_assessment": {
             "method": "elgendi",
             "th": 0.8
@@ -37,10 +37,10 @@
         "params":{
             "in_channels": 5,
             "out_dim": 200,
-            "num_blocks": 2,
-            "num_inception_per_block": 3,
-            "kernel_sizes": [9, 19, 39],
-            "bottleneck_channels": 32,
+            "num_blocks": 1,
+            "num_inception_per_block": 2,
+            "kernel_sizes": [9, 19],
+            "bottleneck_channels": 16,
             "use_residual": true,
             "channels_first": false,
             "verbose": false,
@@ -70,7 +70,7 @@
             "mode": "min",
             "save_best_only": true
         },
-        "gradient_accum": 1
+        "gradient_accum": 2
     },
     "test":{
         "device": "0",

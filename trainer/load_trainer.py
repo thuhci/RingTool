@@ -16,7 +16,7 @@ from unsupervised.spo2.spo2 import get_spo2
 class BaseTrainer:
     def __init__(self, model, config: Dict):
         self.config = config
-        if config["method"]["name"] in ["resnet", "transformer"]:
+        if config["method"]["name"] in ["resnet", "transformer", "inception_time"]:
             self.model = model
             self.device = torch.device("cuda:" + str(config["train"]["device"]) 
                                     if torch.cuda.is_available() and config["train"]["device"] != "cpu" 
@@ -32,11 +32,11 @@ class BaseTrainer:
         """加载损失函数"""
         raise NotImplementedError("子类需要实现 load_criterion 方法")
 
-    def fit(self, train_loader, valid_loader):
+    def fit(self, train_loader, valid_loader, task=None):
         """训练模型"""
         raise NotImplementedError("子类需要实现 fit 方法")
 
-    def test(self, test_loader):
+    def test(self, test_loader, checkpoint_path=None, task=None):
         """测试模型"""
         raise NotImplementedError("子类需要实现 test 方法")
     
@@ -153,7 +153,7 @@ class SupervisedTrainer(BaseTrainer):
         else:
             raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
 
-    def fit(self, train_loader, valid_loader,task):
+    def fit(self, train_loader, valid_loader, task=None):
         epochs = self.config.get("train", {}).get("epochs", 200)
         best_loss = float('inf')  # For metrics like loss where lower is better
         # patience = self.config.get("train", {}).get("early_stopping", {}).get("patience", 10)
@@ -316,11 +316,12 @@ class SupervisedTrainer(BaseTrainer):
 
 def load_trainer(model, model_name: str, config: Dict):
     """根据模型名称加载对应的训练器"""
-    if model_name in ["resnet", "transformer"]:
+    if model_name in ["resnet", "transformer", "inception_time"]:
         return SupervisedTrainer(model, config)
     elif model_name in ["peak", "fft", "ratio"]:
         return UnsupervisedTester(model, config)
     return BaseTrainer(model, config)
+
 
 if __name__ == '__main__':
     import argparse
