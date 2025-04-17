@@ -111,7 +111,7 @@ class LoadDataset(Dataset):
                     exit(1)
 
                 if len(accels_data) > 3:
-                    logging.error("Only support one set of accelerometers. Try use ax/ay/az-standarlized in input_type.")
+                    logging.error("Only support one set of accelerometers. Try use ax/ay/az-standardized in input_type.")
                     exit(1)
                 elif len(accels_data) == 3:
                     ax = ay = az = None
