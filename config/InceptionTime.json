@@ -14,7 +14,7 @@
     },
     "dataset":{
         "ring_type": "ring2",
-        "input_type": ["ir-filtered", "red-filtered","ax-filtered","ay-filtered","az-filtered"],
+        "input_type": ["ir-filtered", "red-filtered","ax-standardized","ay-standardized","az-standardized"],
         "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
         "shuffle": true,
         "batch_size": 128,
@@ -51,7 +51,7 @@
     },
     "train":{
         "device": "0",
-        "epochs": 300,
+        "epochs": 200,
         "lr": 5e-4,
         "criterion": "mse",
         "optimizer": "adamw",

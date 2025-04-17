@@ -62,7 +62,11 @@ class LoadDataset(Dataset):
         # Properly access nested quality threshold
         quality_th = self.config.get("quality_assessment", {}).get("th", 0.8)  # Default quality threshold is 0.8
         commercial_hr_label = []
-        
+        accel_combined = self.config.get("dataset", {}).get("accel_combined", False)
+        combined_method = self.config.get("dataset", {}).get("accel_combined_method", "magnitude")
+        if accel_combined:
+            logging.info(f"Using combined accels with metric {combined_method}.")
+
         for i in tqdm(range(len(self.raw_data))):
             # Load the data in channels
             channel_tensors = []
@@ -71,7 +75,6 @@ class LoadDataset(Dataset):
                 continue
 
             accels_data = {}  # handle accels data separately
-            accel_combined = self.config.get("dataset", {}).get("accel_combined", False)
             # Process each channel separately
             for channel in self.channels:
                 # Get the numpy array for this channel
@@ -127,7 +130,6 @@ class LoadDataset(Dataset):
                     
                     # accel_features = extract_accel_features(ax, ay, az)
                     accel_features = extract_accel_features_cuda(ax, ay, az)  # GPU
-                    combined_method = self.config.get("dataset", {}).get("accel_combined_method", "magnitude")
 
                     channel_tensor = accel_features[combined_method].unsqueeze(1)
                     channel_tensors.append(channel_tensor.cpu())

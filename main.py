@@ -1,24 +1,27 @@
+import argparse
 import datetime
 import json
+import logging
 import os
+import random
+import time
+import warnings
+from typing import Dict, List, Optional, Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import logging
-import warnings
-from scipy.signal import welch, get_window, butter, filtfilt
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-import argparse
-from nets.load_model import load_model
-from dataset.load_dataset import load_dataset
-from trainer.load_trainer import load_trainer
-from typing import List, Dict, Optional, Union
-import torch 
+import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-import random
+import torch.optim as optim
+from scipy.signal import butter, filtfilt, get_window, welch
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, Dataset
+
+from dataset.load_dataset import load_dataset
+from nets.load_model import load_model
+from trainer.load_trainer import load_trainer
 
 
 # TODO: 
@@ -155,8 +158,8 @@ def main(config_path):
         for task in tasks:
             # load model
             model = load_model(config['method'])
-            logging.info(f"Successfully loaded model {config['method']}")
-            logging.info(f"Running experiment with split config: {split_config}")
+            logging.info(f"Successfully loaded model {json.dumps(config['method'], indent=4)}")
+            logging.info(f"Running experiment with split config: {json.dumps(split_config, indent=4)}")
 
             trainer = load_trainer(model, config['method']['name'], config)
             
@@ -204,9 +207,9 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
-    # parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
+    parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
     # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
-    parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
+    # parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
     args = parser.parse_args()
     # Load the configuration
     config = load_config(args.config)
@@ -222,19 +225,24 @@ if __name__ == '__main__':
 
     # Set up file and console logging
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             logging.FileHandler(log_filename),
             logging.StreamHandler()
         ]
-    )    
+    )
+    logging.getLogger('matplotlib').setLevel(logging.INFO)
     logging.info(f"Logging to: {log_filename}")
 
-
+    start_time = time.time()
     if config["method"]["type"] == "unsupervised":
         # unsupervised methods
         unsupervised(args.config)
     else:
         # supervised methods
         main(args.config)
+
+
+    # Existing code execution
+    logging.info(f"Exp {exp_name} Finished in {time.time() - start_time:.2f} seconds")

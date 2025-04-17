@@ -108,7 +108,7 @@ class UnsupervisedTester(BaseTrainer):
         
         # Calculate metrics
         metrics = calculate_metrics(all_predictions, all_targets)
-        logging.info(f"Task: {task} - "
+        logging.debug(f"Task: {task} - "
               f"MAE: {metrics['mae']:.4f}, RMSE: {metrics['rmse']:.4f}, "
               f"MAPE: {metrics['mape']:.2f}%, Pearson: {metrics['pearson']:.4f}")
         
@@ -156,7 +156,16 @@ class SupervisedTrainer(BaseTrainer):
     def fit(self, train_loader, valid_loader, task=None):
         epochs = self.config.get("train", {}).get("epochs", 200)
         best_loss = float('inf')  # For metrics like loss where lower is better
-        # patience = self.config.get("train", {}).get("early_stopping", {}).get("patience", 10)
+        
+        # Early stopping setup
+        early_stopping = self.config.get("train", {}).get("early_stopping", {})
+        early_stop = False
+        early_stopping_patience = early_stopping.get("patience", 40)  # Default patience is 40 epochs
+        monitor = early_stopping.get("monitor", "val_loss")  # Metric to monitor
+        mode = early_stopping.get("mode", "min")  # 'min' for loss, 'max' for metrics like accuracy
+        counter = 0  # Counter for early stopping
+        best_score = float('inf') if mode == "min" else float('-inf')
+
         scheduler = None
         if self.config.get("train", {}).get("scheduler", {}).get("type", None) == "reduce_on_plateau":
             factor = self.config.get("train", {}).get("scheduler", {}).get("factor", 0.5)
@@ -180,6 +189,11 @@ class SupervisedTrainer(BaseTrainer):
         best_checkpoint_path = os.path.join(checkpoint_dir, f"{model_name}_best.pt")
         if self.gradient_accum > 1:
             logging.info(f"Training with gradient accumulation: {self.gradient_accum} steps")
+        
+        # Log early stopping config if enabled
+        if early_stopping:
+            logging.info(f"Early stopping enabled with patience={early_stopping_patience}, monitoring={monitor}, mode={mode}")
+            
         progress_bar = tqdm(range(epochs), desc="Training Progress")
         for epoch in progress_bar:
             # 训练阶段
@@ -222,6 +236,9 @@ class SupervisedTrainer(BaseTrainer):
             valid_loss_avg = valid_loss / len(valid_loader)
             metrics = calculate_metrics(all_preds, all_targets)
             
+            # Get current score for early stopping
+            current_score = valid_loss_avg if monitor == "val_loss" else metrics.get(monitor, valid_loss_avg)
+            
             # Save checkpoint if current model is better
             if valid_loss_avg < best_loss:
                 best_loss = valid_loss_avg
@@ -232,39 +249,57 @@ class SupervisedTrainer(BaseTrainer):
                     'valid_loss': valid_loss_avg,
                     'metrics': metrics
                 }, best_checkpoint_path)
-                message = f"Epoch {epoch+1}: Saved best model with validation loss={valid_loss_avg:.4f}"
-                logging.info(message)
+                # message = f"Epoch {epoch+1}: Saved best model with validation loss={valid_loss_avg:.4f}"
+                # logging.info(message)
                 progress_bar.set_description(f"Training Progress (saved best model, val_loss={valid_loss_avg:.4f})")
+            
+            # Check early stopping conditions
+            if early_stopping:
+                improved = (mode == "min" and current_score < best_score) or (mode == "max" and current_score > best_score)
+                if improved:
+                    best_score = current_score
+                    counter = 0
+                else:
+                    counter += 1
+                    if counter >= early_stopping_patience:
+                        logging.info(f"Early stopping triggered after {epoch+1} epochs! No improvement in {monitor} for {early_stopping_patience} epochs.")
+                        early_stop = True
 
             if scheduler:
                 prev_lr = self.optimizer.param_groups[0]['lr']
                 scheduler.step(valid_loss_avg)
                 current_lr = self.optimizer.param_groups[0]['lr']
-                if current_lr < prev_lr:
-                    logging.info(f"Epoch {epoch+1}: Reduced learning rate from {prev_lr:.8f} to {current_lr:.8f} due to plateau.")
-                else:
-                    logging.info(f"Epoch {epoch+1}: Learning rate unchanged at {current_lr:.8f}.")
+                # if current_lr < prev_lr:
+                #     logging.info(f"Epoch {epoch+1}: Reduced learning rate from {prev_lr:.8f} to {current_lr:.8f} due to plateau.")
+                # else:
+                #     logging.info(f"Epoch {epoch+1}: Learning rate unchanged at {current_lr:.8f}.")
 
             progress_bar.set_postfix(
                 epoch=f"{epoch+1}/{epochs}",
                 task=task,
                 train_loss=f"{train_loss_avg:.4f}",
                 val_loss=f"{valid_loss_avg:.4f}",
-                mae=f"{metrics['mae']:.4f}"
+                mae=f"{metrics['mae']:.4f}",
+                learning_rate=f"{self.optimizer.param_groups[0]['lr']:.8f}",
+                early_stop_count=f"{counter}/{early_stopping_patience}" if early_stopping else "N/A"
             )
 
             # Print detailed metrics every 10 epochs
             if epoch % 10 == 0 or epoch == epochs-1:
                 logging.info(f"\nEpoch {epoch+1}/{epochs}:  Task: {task}")
-                logging.info(f"  Training Loss: {train_loss_avg:.4f}")
-                logging.info(f"  Validation Loss: {valid_loss_avg:.4f}, "
+                logging.debug(f"  Training Loss: {train_loss_avg:.4f}")
+                logging.debug(f"  Validation Loss: {valid_loss_avg:.4f}, "
                     f"MAE: {metrics['mae']:.4f}, RMSE: {metrics['rmse']:.4f}, "
                     f"MAPE: {metrics['mape']:.2f}%, Pearson: {metrics['pearson']:.4f}")
                 
                 if self.eval_func is not None:
                     score = self.eval_func(all_preds, all_targets)
-                    logging.info(f"  Custom evaluation score: {score}")
+                    logging.debug(f"Custom evaluation score: {score}")
             
+            # Break the loop if early stopping is triggered
+            if early_stop:
+                logging.info("Training stopped early due to early stopping criteria.")
+                break
 
         
         return best_checkpoint_path
@@ -274,8 +309,10 @@ class SupervisedTrainer(BaseTrainer):
         if checkpoint_path and os.path.exists(checkpoint_path):
             logging.info(f"Loading best model checkpoint from: {checkpoint_path}")
             checkpoint = torch.load(checkpoint_path)
+            total_params = sum(p.numel() for p in self.model.state_dict().values())
+            logging.debug(f"Model parameters: {total_params}")
             self.model.load_state_dict(checkpoint['model_state_dict'])
-            logging.info(f"Loaded model from epoch {checkpoint['epoch']+1} with "
+            logging.debug(f"Loaded model from epoch {checkpoint['epoch']+1} with "
                   f"validation loss: {checkpoint['valid_loss']:.4f}, "
                   f"MAE: {checkpoint['metrics']['mae']:.4f}")
         
@@ -294,7 +331,7 @@ class SupervisedTrainer(BaseTrainer):
         all_targets = torch.cat(all_targets, dim=0)
         
         metrics = calculate_metrics(all_preds, all_targets)
-        logging.info(f"Task:{task} Test Loss: {test_loss / len(test_loader):.4f}, "
+        logging.critical(f"Task:{task} Test Loss: {test_loss / len(test_loader):.4f}, "
               f"MAE: {metrics['mae']:.4f}, RMSE: {metrics['rmse']:.4f}, "
               f"MAPE: {metrics['mape']:.2f}%, Pearson: {metrics['pearson']:.4f}")
         
@@ -305,7 +342,7 @@ class SupervisedTrainer(BaseTrainer):
        
         if self.eval_func is not None:
             score = self.eval_func(all_preds, all_targets)
-            logging.info(f"Custom evaluation score: {score}")
+            logging.debug(f"Custom evaluation score: {score}")
 
         return {
             "loss": test_loss / len(test_loader),

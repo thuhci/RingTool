@@ -6,7 +6,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
             "justMyCode": true,
             "args": []
         },
@@ -15,7 +15,7 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
-            "console": "integratedTerminal",
+            "console": "internalConsole",
             "justMyCode": true,
             "args": [
                 "--config", "${input:configPath}"
