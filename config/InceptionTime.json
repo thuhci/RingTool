@@ -1,5 +1,5 @@
 {
-    "exp_name": "inception_time",
+    "exp_name": "inception_time_accels_combination_trial",
     "mode": "train",
     "split":{
         "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
@@ -17,7 +17,7 @@
         "input_type": ["ir-filtered", "red-filtered","ax-filtered","ay-filtered","az-filtered"],
         "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
         "shuffle": true,
-        "batch_size": 16,
+        "batch_size": 128,
         "quality_assessment": {
             "method": "elgendi",
             "th": 0.8
@@ -25,7 +25,9 @@
         "target_fs": 100,
         "window_duration": 30,
         "experiment": ["Health", "Daily","Sport"],
-        "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"]
+        "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"],
+        "accel_combined": true,
+        "accel_combined_method": "magnitude"
     },
     "seed": 42,
     "csv_path": "csv/inception_time/inception_time.csv",
@@ -35,7 +37,7 @@
         "type": "ML", 
         "model_path": null,
         "params":{
-            "in_channels": 5,
+            "in_channels": 3,
             "out_dim": 200,
             "num_blocks": 1,
             "num_inception_per_block": 2,
@@ -74,7 +76,7 @@
     },
     "test":{
         "device": "0",
-        "batch_size": 32,
+        "batch_size": 128,
         "metrics": ["mae", "rmse", "mape", "pearson"],
         "model_path": null,
         "model_name": null

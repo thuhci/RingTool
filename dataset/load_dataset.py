@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -7,7 +8,15 @@ import os
 import pickle
 import numpy as np
 import random
-from utils.utils import calculate_metrics,save_metrics_to_csv
+from utils.utils import calculate_metrics, save_metrics_to_csv, extract_accel_features_cuda
+
+
+accel_channels = {
+    "ax-raw","ax-filtered","ax-standardized","ax-difference","ax-welch","ax-filtered-rr","ax-welch-rr",
+    "ay-raw","ay-filtered","ay-standardized","ay-difference","ay-welch","ay-filtered-rr","ay-welch-rr",
+    "az-raw","az-filtered","az-standardized","az-difference","az-welch","az-filtered-rr","az-welch-rr"
+}
+
 
 def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None):
     """
@@ -29,9 +38,8 @@ def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels:
     return LoadDataset(config, raw_data, task=task, channels=channels)
     
 
-
 class LoadDataset(Dataset):
-    def __init__(self, config: Dict, raw_data: List, channels: List, task: str="hr"):
+    def __init__(self, config: Dict, raw_data: pd.DataFrame, channels: List, task: str="hr"):
         self.task = task
         self.raw_data = raw_data
         self.config = config
@@ -54,16 +62,19 @@ class LoadDataset(Dataset):
         # Properly access nested quality threshold
         quality_th = self.config.get("quality_assessment", {}).get("th", 0.8)  # Default quality threshold is 0.8
         commercial_hr_label = []
+        
         for i in tqdm(range(len(self.raw_data))):
             # Load the data in channels
             channel_tensors = []
             skip_sample = False
             if self.raw_data.iloc[i]['ir-quality'] < quality_th or self.raw_data.iloc[i]['red-quality'] < quality_th:
                 continue
+
+            accels_data = {}  # handle accels data separately
+            accel_combined = self.config.get("dataset", {}).get("accel_combined", False)
             # Process each channel separately
             for channel in self.channels:
                 # Get the numpy array for this channel
-                
                 channel_data = self.raw_data.iloc[i][channel]
                 # check if the channel is np.array
                 if not isinstance(channel_data, np.ndarray):
@@ -81,9 +92,47 @@ class LoadDataset(Dataset):
                     # If shorter than target, pad with zeros
                     padding = np.zeros(target_length - len(channel_data))
                     channel_data = np.concatenate([channel_data, padding])
+                
+                # if config: accel_combined set to True, handle accels separately
+                if accel_combined and channel in accel_channels:
+                    accels_data[channel] = channel_data
+                    continue
+
                 # Convert to tensor (adding a channel dimension)
                 channel_tensor = torch.tensor(channel_data, dtype=torch.float32).unsqueeze(1)
                 channel_tensors.append(channel_tensor)
+
+            # process accels_data
+            if accel_combined:
+                try:
+                    assert self.config.get("method").get("params").get("in_channels") == len(self.config.get("dataset").get("input_type")) - 2
+                except (AssertionError, AttributeError, KeyError) as e:
+                    logging.error(f"Configuration error: {e}. Mismatch between 'in_channels' and the number of input types minus 2. Since accel_combined is applied, channels for accels should be altered from 3 to 1.")
+                    exit(1)
+
+                if len(accels_data) > 3:
+                    logging.error("Only support one set of accelerometers. Try use ax/ay/az-standarlized in input_type.")
+                    exit(1)
+                elif len(accels_data) == 3:
+                    ax = ay = az = None
+
+                    # Loop through the keys and assign values accordingly
+                    for key, value in accels_data.items():
+                        if key.startswith('ax-'):
+                            ax = value
+                        elif key.startswith('ay-'):
+                            ay = value
+                        elif key.startswith('az-'):
+                            az = value
+                    
+                    # accel_features = extract_accel_features(ax, ay, az)
+                    accel_features = extract_accel_features_cuda(ax, ay, az)  # GPU
+                    combined_method = self.config.get("dataset", {}).get("accel_combined_method", "magnitude")
+
+                    channel_tensor = accel_features[combined_method].unsqueeze(1)
+                    channel_tensors.append(channel_tensor.cpu())
+
+
             # Skip this sample if any channel was too short
             if skip_sample:
                 continue
@@ -125,7 +174,7 @@ class LoadDataset(Dataset):
                 metrics = {"note": "No data available for metrics calculation"}
             
             
-        print(f"Loaded {len(self.data)} samples for task {self.task} with channels {self.channels}")
+        print(f"Loaded {len(self)} samples for task {self.task} with channels {self.channels}")
 
     def __len__(self):
         return len(self.data)

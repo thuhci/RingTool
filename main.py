@@ -63,9 +63,9 @@ def load_config(config_path):
         config = json.load(file)
     return config
 
-def find_all_data(path,ring_type):
+def find_all_data(path, ring_type) -> Dict[str, pd.DataFrame]:
     # load all subject data from a folder, subject_ring1_processed.pkl
-    all_data = {}
+    all_data = {}  # subject_id -> pd.DF
     for filename in os.listdir(path):
         if filename.endswith('.pkl') and ring_type in filename:
             # load data
@@ -118,7 +118,6 @@ def unsupervised(config_path):
             test_results = tester.test(all_loader, None, task)
             # print test results
             logging.info(f"Test results for task {task}: {test_results}")
-    
 
 
 def main(config_path):
