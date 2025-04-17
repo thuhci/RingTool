@@ -2,7 +2,7 @@ import os
 
 from nets.inception_time import InceptionTime
 from nets.resnet import ResNet1D
-from nets.transformer import MyTransformer
+from nets.transformer import TaoBERT
 
 
 def load_model(config):
@@ -11,7 +11,7 @@ def load_model(config):
             **config["params"]
         )
     elif config['name'] == "transformer":
-        return MyTransformer(
+        return TaoBERT(
             **config["params"]
         )
     elif config['name'] == "inception_time":

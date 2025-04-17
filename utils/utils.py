@@ -34,6 +34,7 @@ def calculate_mape(predictions, targets):
         return mape.item(), standard_error.item()
     return float('inf'), float('inf')
 
+'''
 def calculate_pearson(predictions, targets):
     """Calculate Pearson correlation coefficient"""
     x = predictions.flatten()
@@ -48,6 +49,15 @@ def calculate_pearson(predictions, targets):
         standard_error = torch.sqrt((1 - pearson**2) / (n - 2))
         return pearson.item(), standard_error.item()
     return pearson.item(), float('inf')
+'''
+    
+def calculate_pearson(x, y, eps=1e-5):
+    x_, y_ = torch.mean(x, dim=-1, keepdims=True), torch.mean(y, dim=-1, keepdims=True)
+    pearson = torch.sum((x-x_)*(y-y_), dim=-1)/((torch.sum((x-x_)**2, dim=-1)*torch.sum((y-y_)**2, dim=-1))**0.5+eps)
+    n = torch.tensor(x.numel())
+    if n>2:
+        return pearson, torch.sqrt((1 - pearson**2) / (torch.tensor(x.numel()) - 2))
+    return pearson, float('inf')
 
 def value_with_std(value, std):
     """Return value with standard error: value±std"""

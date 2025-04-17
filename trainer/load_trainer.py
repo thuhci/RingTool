@@ -13,6 +13,8 @@ from unsupervised.hr.hr import get_hr
 from unsupervised.rr.rr import get_rr
 from unsupervised.spo2.spo2 import get_spo2
 
+from torch.cuda.amp import autocast, GradScaler
+
 class BaseTrainer:
     def __init__(self, model, config: Dict):
         self.config = config
@@ -154,6 +156,7 @@ class SupervisedTrainer(BaseTrainer):
             raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
 
     def fit(self, train_loader, valid_loader, task=None):
+        scaler = GradScaler(enabled=True)
         epochs = self.config.get("train", {}).get("epochs", 200)
         best_loss = float('inf')  # For metrics like loss where lower is better
         
@@ -202,15 +205,20 @@ class SupervisedTrainer(BaseTrainer):
             self.optimizer.zero_grad()
             for idx, (inputs, labels) in enumerate(train_loader):
                 # Gradient accumulation
+
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
-                outputs, _ = self.model(inputs)
-                loss = self.criterion(outputs, labels)
-                loss = loss / self.gradient_accum
-                loss.backward()
+                with autocast():
+                    outputs, _ = self.model(inputs)
+                    loss = self.criterion(outputs, labels)
+                scaled_loss = scaler.scale(loss)
+                scaled_loss = scaled_loss / self.gradient_accum
+                scaled_loss.backward()
                 if (idx + 1) % self.gradient_accum == 0:
-                    self.optimizer.step()
+                    scaler.step(self.optimizer)
+                    scaler.update()
                     self.optimizer.zero_grad()
-                train_loss += loss.item() * self.gradient_accum
+                train_loss += loss.item() / self.gradient_accum
+
             if len(train_loader) % self.gradient_accum != 0:
                 self.optimizer.step()
                 self.optimizer.zero_grad()

@@ -14,10 +14,10 @@
     },
     "dataset":{
         "ring_type": "ring2",
-        "input_type": ["ir-filtered", "red-filtered","ax-standardized","ay-standardized","az-standardized"],
+        "input_type": ["ir-filtered", "red-filtered","ax-raw","ay-raw","az-raw"],
         "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
         "shuffle": true,
-        "batch_size": 16,
+        "batch_size": 32,
         "quality_assessment": {
             "method": "elgendi",
             "th": 0.8
@@ -25,7 +25,9 @@
         "target_fs": 100,
         "window_duration": 30,
         "experiment": ["Health", "Daily","Sport"],
-        "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"]
+        "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"],
+        "accel_combined": true,
+        "accel_combined_method": "magnitude"
     },
     "seed": 42,
     "csv_path": "csv/transformer/transformer.csv",
@@ -35,11 +37,11 @@
         "type": "ML", 
         "model_path": null,
         "params":{
-            "n_channels": 5,  
+            "in_channels": 3,  
             "len_sw": 3000,
             "n_classes": 180,  
             "dim": 128,
-            "depth": 4,
+            "depth": 2,
             "heads": 4,
             "mlp_dim": 64,
             "dropout": 0.1,
@@ -49,7 +51,7 @@
     "train":{
         "device": "1",
         "epochs": 200,
-        "gradient_accum": 8,
+        "gradient_accum": 1,
         "lr": 1e-3,
         "criterion": "mse",
         "optimizer": "adam",
