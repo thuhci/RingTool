@@ -6,3 +6,4 @@ abandon/
 models/
 csv/
 
+logs/*.log

@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict
 
@@ -85,6 +86,7 @@ def save_metrics_to_csv(metrics, config, task, result_csv_path=None):
         str: Path where the CSV was saved
     """
     import os
+
     import pandas as pd
     
     exp_name = config.get("exp_name")
@@ -125,7 +127,7 @@ def save_metrics_to_csv(metrics, config, task, result_csv_path=None):
     metrics_df.to_csv(result_csv_path, mode='a' if file_exists else 'w', 
               header=not file_exists, index=False)
     
-    print(f"Saved results to {result_csv_path}")
+    logging.info(f"Saved results to {result_csv_path}")
     return result_csv_path
 
 def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=None):
@@ -143,6 +145,7 @@ def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=No
         str: Path where the images were saved
     """
     import os
+
     import matplotlib.pyplot as plt
     import numpy as np
     from scipy.stats import gaussian_kde
@@ -251,7 +254,7 @@ def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=No
     plt.savefig(hist_path, dpi=300)
     plt.close(fig)
     
-    print(f"Saved visualization plots to {task_img_folder}")
+    logging.info(f"Saved visualization plots to {task_img_folder}")
     return task_img_folder
 
 

@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import numpy as np
@@ -18,6 +19,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import random
+
 
 # TODO: 
 '''
@@ -199,9 +201,6 @@ def main(config_path):
 
 
 if __name__ == '__main__':
-    # Set up logging
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-    
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
@@ -211,6 +210,28 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # Load the configuration
     config = load_config(args.config)
+    exp_name = config.get("exp_name")
+
+    # Set up logging
+    # Create logs directory if it doesn't exist
+    os.makedirs("logs", exist_ok=True)
+    
+    # Get current timestamp for the log filename
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = f"logs/ringtool_{exp_name}_{timestamp}.log"
+
+    # Set up file and console logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_filename),
+            logging.StreamHandler()
+        ]
+    )    
+    logging.info(f"Logging to: {log_filename}")
+
+
     if config["method"]["type"] == "unsupervised":
         # unsupervised methods
         unsupervised(args.config)

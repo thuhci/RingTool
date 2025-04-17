@@ -232,6 +232,8 @@ class SupervisedTrainer(BaseTrainer):
                     'valid_loss': valid_loss_avg,
                     'metrics': metrics
                 }, best_checkpoint_path)
+                message = f"Epoch {epoch+1}: Saved best model with validation loss={valid_loss_avg:.4f}"
+                logging.info(message)
                 progress_bar.set_description(f"Training Progress (saved best model, val_loss={valid_loss_avg:.4f})")
 
             if scheduler:
