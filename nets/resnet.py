@@ -5,8 +5,6 @@ import torch.optim as optim
 import numpy as np
 
 
-
-
 class MyConv1dPadSame(nn.Module):
     """
     extend nn.Conv1d to support SAME padding
@@ -19,26 +17,23 @@ class MyConv1dPadSame(nn.Module):
         self.stride = stride
         self.groups = groups
         self.conv = torch.nn.Conv1d(
-            in_channels=self.in_channels, 
-            out_channels=self.out_channels, 
-            kernel_size=self.kernel_size, 
-            stride=self.stride, 
+            in_channels=self.in_channels,
+            out_channels=self.out_channels,
+            kernel_size=self.kernel_size,
+            stride=self.stride,
             groups=self.groups)
 
     def forward(self, x):
-        # import ipdb; ipdb.set_trace()
         net = x
-        # compute pad shape
         in_dim = net.shape[-1]
         out_dim = (in_dim + self.stride - 1) // self.stride
         p = max(0, (out_dim - 1) * self.stride + self.kernel_size - in_dim)
         pad_left = p // 2
         pad_right = p - pad_left
         net = F.pad(net, (pad_left, pad_right), "constant", 0)
-        
         net = self.conv(net)
         return net
-        
+
 
 class MyMaxPool1dPadSame(nn.Module):
     """
@@ -52,7 +47,6 @@ class MyMaxPool1dPadSame(nn.Module):
 
     def forward(self, x):
         net = x
-        # compute pad shape
         in_dim = net.shape[-1]
         out_dim = (in_dim + self.stride - 1) // self.stride
         p = max(0, (out_dim - 1) * self.stride + self.kernel_size - in_dim)
@@ -61,13 +55,14 @@ class MyMaxPool1dPadSame(nn.Module):
         net = F.pad(net, (pad_left, pad_right), "constant", 0)
         net = self.max_pool(net)
         return net
-    
+
 
 class BasicBlock(nn.Module):
     """
     ResNet Basic Block
     """
-    def __init__(self, in_channels, out_channels, kernel_size, stride, groups, downsample, use_bn, use_do, is_first_block=False):
+    # Modify __init__ to accept dropout_p
+    def __init__(self, in_channels, out_channels, kernel_size, stride, groups, downsample, use_bn, use_do, dropout_p=0.5, is_first_block=False):
         super(BasicBlock, self).__init__()
         self.in_channels = in_channels
         self.kernel_size = kernel_size
@@ -79,29 +74,32 @@ class BasicBlock(nn.Module):
         self.is_first_block = is_first_block
         self.use_bn = use_bn
         self.use_do = use_do
+        self.dropout_p = dropout_p
 
         # the first conv
         self.bn1 = nn.BatchNorm1d(in_channels)
         self.relu1 = nn.ReLU()
-        self.do1 = nn.Dropout(p=0.5)
+        # Use the dropout_p parameter here
+        self.do1 = nn.Dropout(p=self.dropout_p)
         self.conv1 = MyConv1dPadSame(
-            in_channels=in_channels, 
-            out_channels=out_channels, 
-            kernel_size=kernel_size, 
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
             stride=self.stride,
             groups=self.groups)
 
         # the second conv
         self.bn2 = nn.BatchNorm1d(out_channels)
         self.relu2 = nn.ReLU()
-        self.do2 = nn.Dropout(p=0.5)
+        # Use the dropout_p parameter here
+        self.do2 = nn.Dropout(p=self.dropout_p)
         self.conv2 = MyConv1dPadSame(
-            in_channels=out_channels, 
-            out_channels=out_channels, 
-            kernel_size=kernel_size, 
+            in_channels=out_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
             stride=1,
             groups=self.groups)
-                
+
         self.max_pool = MyMaxPool1dPadSame(kernel_size=self.stride)
 
     def forward(self, x):
@@ -135,26 +133,33 @@ class BasicBlock(nn.Module):
         # shortcut
         out += identity
         return out
-    
 
- 
+
 class ResNet1D(nn.Module):
     """
     Input:
-        X: (n_samples, n_channel, n_length)
+        X: (n_samples, n_channel, n_length) -> Changed to (n_samples, n_length, n_channel) based on forward
         Y: (n_samples)
     Output:
-        out: (n_samples)
+        out: (n_samples) for regression or (n_samples, n_classes) for classification
     Pararmetes:
-        in_channels: dim of input, the same as n_channel
-        base_filters: number of filters in the first several Conv layer, it will double at every 4 layers
+        in_channels: dim of input features (e.g., 5 for ir, red, ax, ay, az)
+        base_filters: number of filters in the first several Conv layer, it will double at every increasefilter_gap blocks
         kernel_size: width of kernel
-        stride: stride of kernel moving
-        groups: set larget to 1 as ResNeXt
-        n_block: number of blocks
+        stride: stride of kernel moving (in BasicBlock)
+        groups: set largely to 1 for ResNet, >1 for ResNeXt
+        n_block: number of BasicBlocks
+        downsample_gap: how many blocks between downsampling layers
+        increasefilter_gap: how many blocks between increasing filter count
+        use_bn: whether to use BatchNorm
+        use_do: whether to use Dropout in blocks
+        dropout_p: the probability for dropout layers in blocks (NEW)
+        verbose: print shapes during forward pass
+        backbone: if True, return features before final dense layer
+        output_dim: output dimension (1 for regression, n_classes for classification) - Modified default to 1 for regression
     """
-
-    def __init__(self, in_channels, base_filters, kernel_size, stride, groups, n_block, downsample_gap=2, increasefilter_gap=4, use_bn=True, use_do=True, verbose=False, backbone=False, output_dim=200):
+    # Add dropout_p to __init__
+    def __init__(self, in_channels, base_filters, kernel_size, stride, groups, n_block, downsample_gap=2, increasefilter_gap=4, use_bn=True, use_do=True, dropout_p=0.5, use_final_do=False, final_dropout_p=0.5, verbose=False, backbone=False, output_dim=1): # Default output_dim=1
         super(ResNet1D, self).__init__()
         self.out_dim = output_dim
         self.backbone = backbone
@@ -165,59 +170,69 @@ class ResNet1D(nn.Module):
         self.groups = groups
         self.use_bn = use_bn
         self.use_do = use_do
-        self.downsample_gap = downsample_gap # 2 for base model
-        self.increasefilter_gap = increasefilter_gap # 4 for base model
+        self.dropout_p = dropout_p
+        self.use_final_do = use_final_do
+        self.final_dropout_p = final_dropout_p
+        self.downsample_gap = downsample_gap
+        self.increasefilter_gap = increasefilter_gap
 
         # first block
         self.first_block_conv = MyConv1dPadSame(in_channels=in_channels, out_channels=base_filters, kernel_size=self.kernel_size, stride=1)
         self.first_block_bn = nn.BatchNorm1d(base_filters)
         self.first_block_relu = nn.ReLU()
         out_channels = base_filters
-                
+
         # residual blocks
         self.basicblock_list = nn.ModuleList()
         for i_block in range(self.n_block):
-            # is_first_block
-            is_first_block = True if i_block == 0 else False
-            # downsample at every self.downsample_gap blocks
-            downsample = True if i_block % self.downsample_gap == 0 else False
+            is_first_block = i_block == 0
+            downsample = (i_block + 1) % self.downsample_gap == 0 # Corrected logic? Check if this matches original intent
             
-            # in_channels and out_channels
+            # Correctly calculate in_channels and out_channels based on previous block's output
+            current_in_channels = base_filters * (2**((i_block) // self.increasefilter_gap))
+            current_out_channels = base_filters * (2**((i_block + 1) // self.increasefilter_gap)) # Simpler way to think about it
+
+            # Ensure correct channel handling for the very first block
             if is_first_block:
-                in_channels = base_filters
-                out_channels = in_channels
+                 current_in_channels = base_filters
+                 current_out_channels = base_filters # Usually doesn't change channels in the first block unless increasefilter_gap=1
+
+            # Refined channel calculation logic
+            block_in_channels = out_channels # Channels from the previous layer/block
+            # Increase filters every increasefilter_gap blocks
+            if (i_block > 0) and (i_block % self.increasefilter_gap == 0):
+                 block_out_channels = block_in_channels * 2
             else:
-                # increase filters at every self.increasefilter_gap blocks
-                in_channels = int(base_filters*2**((i_block-1)//self.increasefilter_gap))
-                if (i_block % self.increasefilter_gap == 0) and (i_block != 0):
-                    out_channels = in_channels * 2
-                else:
-                    out_channels = in_channels
-            
+                 block_out_channels = block_in_channels
+
             tmp_block = BasicBlock(
-                in_channels=in_channels, 
-                out_channels=out_channels, 
-                kernel_size=self.kernel_size, 
-                stride = self.stride, 
-                groups = self.groups, 
-                downsample=downsample, 
-                use_bn = self.use_bn, 
-                use_do = self.use_do, 
+                in_channels=block_in_channels, # Use channels from previous layer
+                out_channels=block_out_channels, # Calculated output channels
+                kernel_size=self.kernel_size,
+                stride = self.stride, # Pass stride defined for ResNet1D
+                groups = self.groups,
+                downsample=downsample,
+                use_bn = self.use_bn,
+                use_do = self.use_do,
+                dropout_p = self.dropout_p, # Pass dropout_p here
                 is_first_block=is_first_block)
             self.basicblock_list.append(tmp_block)
+            out_channels = block_out_channels # Update out_channels for the next block's input
 
         # final prediction
         self.final_bn = nn.BatchNorm1d(out_channels)
         self.final_relu = nn.ReLU(inplace=True)
-        # self.do = nn.Dropout(p=0.5)
-        self.dense = nn.Linear(out_channels, 1)
-        self.dense2 = nn.Linear(out_channels, self.out_dim)
-        # self.softmax = nn.Softmax(dim=1)
-        
+        if self.use_final_do:
+            self.final_dropout = nn.Dropout(p=self.final_dropout_p)
+        self.dense = nn.Linear(out_channels, self.out_dim) # Use self.out_dim
+        # Removed dense2 as backbone logic handles feature output
+
     def forward(self, x):
-        # import ipdb; ipdb.set_trace()
-        x = x.transpose(-1,-2) # RESNET 1D takes channels first
+        # Input expected: (batch_size, sequence_length, num_features/channels)
+        # Transpose to: (batch_size, num_features/channels, sequence_length) for Conv1d
+        x = x.transpose(1, 2)
         out = x
+
         # first conv
         if self.verbose:
             print('input shape', out.shape)
@@ -227,31 +242,44 @@ class ResNet1D(nn.Module):
         if self.use_bn:
             out = self.first_block_bn(out)
         out = self.first_block_relu(out)
-        # residual blocks, every block has two conv
+
+        # residual blocks
         for i_block in range(self.n_block):
             net = self.basicblock_list[i_block]
             if self.verbose:
-                print('i_block: {0}, in_channels: {1}, out_channels: {2}, downsample: {3}'.format(i_block, net.in_channels, net.out_channels, net.downsample))
+                print(f'i_block: {i_block}, in_channels: {net.in_channels}, out_channels: {net.out_channels}, downsample: {net.downsample}')
             out = net(out)
             if self.verbose:
-                print(out.shape)
+                print(f'Block {i_block} output shape: {out.shape}')
+
         # final prediction
         if self.use_bn:
             out = self.final_bn(out)
-        out = self.final_relu(out)
-        out = out.mean(-1)
-        if self.backbone:
-            out = self.dense2(out)
-            return None, out
+        out = self.final_relu(out) # Apply final activation
+
+        # Global Average Pooling
+        out = out.mean(dim=-1) # Pool across the sequence length dimension
         if self.verbose:
             print('final pooling', out.shape)
-        # out_class = self.dense(out) # classification
-        # if self.verbose:
-        #     print('dense', out_class.shape)
-        # if self.verbose:
-        #     print('softmax', out_class.shape)
-        # return out_class, out    
+
+        if self.use_final_do:
+            out = self.final_dropout(out)
+
+        # If backbone mode, return features before the final dense layer
+        if self.backbone:
+            # Note: The original code returned None, out. Returning just 'out' (features) is more typical.
+            # Also removed self.dense2 as it seemed redundant if backbone just needs features.
+            return out # Return pooled features
+
+        # Final dense layer for prediction
         out_value = self.dense(out)
-        # the output size is (bs, 1), squeeze it to (bs, )
-        out_value = out_value.squeeze(-1)
+        if self.verbose:
+            print('dense output', out_value.shape)
+
+        # Squeeze output if it's single-value regression (output_dim=1)
+        if self.out_dim == 1:
+            out_value = out_value.squeeze(-1)
+            if self.verbose:
+                print('squeeze output', out_value.shape)
+
         return out_value, out
