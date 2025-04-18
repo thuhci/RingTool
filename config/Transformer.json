@@ -39,7 +39,7 @@
         "params":{
             "in_channels": 3,  
             "len_sw": 3000,
-            "n_classes": 180,  
+            "n_classes": 1,  
             "dim": 128,
             "depth": 2,
             "heads": 4,

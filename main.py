@@ -158,8 +158,9 @@ def main(config_path):
         for task in tasks:
             # load model
             model = load_model(config['method'])
-            logging.info(f"Successfully loaded model {json.dumps(config['method'], indent=4)}")
-            logging.info(f"Running experiment with split config: {json.dumps(split_config, indent=4)}")
+            logging.info(f"Successfully loaded model {config['method']}")
+            logging.info(f"Model params: {sum(p.numel() for p in model.parameters())}")
+            logging.info(f"Running experiment with split config: {split_config}")
 
             trainer = load_trainer(model, config['method']['name'], config)
             
@@ -250,10 +251,11 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
-    parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
     parser.add_argument('--batch-configs-dir', type=str, default=None, help='Path to the configuration JSON files directory. Will execute all exps in the dir.')
+    # parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
+    # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
+    parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
+    # parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
     args = parser.parse_args()
     
     batch_configs_dir = args.batch_configs_dir

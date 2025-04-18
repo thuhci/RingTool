@@ -52,12 +52,26 @@ def calculate_pearson(predictions, targets):
 '''
     
 def calculate_pearson(x, y, eps=1e-5):
-    x_, y_ = torch.mean(x, dim=-1, keepdims=True), torch.mean(y, dim=-1, keepdims=True)
-    pearson = torch.sum((x-x_)*(y-y_), dim=-1)/((torch.sum((x-x_)**2, dim=-1)*torch.sum((y-y_)**2, dim=-1))**0.5+eps)
-    n = torch.tensor(x.numel())
-    if n>2:
-        return pearson, torch.sqrt((1 - pearson**2) / (torch.tensor(x.numel()) - 2))
-    return pearson, float('inf')
+    # Flatten tensors to ensure we're computing a single correlation value
+    x_flat = x.flatten()
+    y_flat = y.flatten()
+    
+    # Calculate means
+    x_mean = torch.mean(x_flat)
+    y_mean = torch.mean(y_flat)
+    
+    # Calculate Pearson correlation
+    numerator = torch.sum((x_flat - x_mean) * (y_flat - y_mean))
+    denominator = torch.sqrt(torch.sum((x_flat - x_mean) ** 2) * torch.sum((y_flat - y_mean) ** 2) + eps)
+    
+    pearson = numerator / denominator
+    
+    # Calculate standard error
+    n = torch.tensor(x_flat.numel())
+    if n > 2:
+        standard_error = torch.sqrt((1 - pearson**2) / (n - 2))
+        return pearson.item(), standard_error.item()
+    return pearson.item(), float('inf')
 
 def value_with_std(value, std):
     """Return value with standard error: value±std"""

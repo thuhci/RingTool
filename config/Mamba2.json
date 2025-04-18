@@ -1,6 +1,6 @@
 {
-    "exp_name": "ratio",
-    "mode": "test",
+    "exp_name": "mamba2",
+    "mode": "train",
     "split":{
         "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
         "valid": ["00013", "00018", "00002", "00032", "00028", "00021", "00000"], 
@@ -14,10 +14,10 @@
     },
     "dataset":{
         "ring_type": "ring2",
-        "input_type": ["ir-raw","red-raw"],
-        "label_type": ["spo2"],
+        "input_type": ["ir-filtered", "red-filtered","ax-raw","ay-raw","az-raw"],
+        "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
         "shuffle": true,
-        "batch_size": 128,
+        "batch_size": 16,
         "quality_assessment": {
             "method": "elgendi",
             "th": 0.8
@@ -25,31 +25,33 @@
         "target_fs": 100,
         "window_duration": 30,
         "experiment": ["Health", "Daily","Sport"],
-        "task": ["spo2"]
+        "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"],
+        "accel_combined": true,
+        "accel_combined_method": "magnitude"
     },
     "seed": 42,
-    "csv_path": "csv/ratio/ratio.csv",
-    "img_path": "img/ratio",
+    "csv_path": "csv/transformer/transformer.csv",
+    "img_path": "img/transformer",
     "method": {
-        "name": "ratio",
-        "type": "unsupervised", 
+        "name": "transformer",
+        "type": "ML", 
         "model_path": null,
         "params":{
-            "in_channels": 1,  
-            "base_filters": 32,
-            "kernel_size": 5,
-            "stride": 2,
-            "groups": 1,
-            "n_block": 8,
-            "n_classes": 180,  
-            "downsample_gap": 2,
-            "increasefilter_gap": 4,
+            "in_channels": 3,  
+            "len_sw": 3000,
+            "n_classes": 1,  
+            "dim": 128,
+            "depth": 2,
+            "heads": 4,
+            "mlp_dim": 64,
+            "dropout": 0.1,
             "backbone": false
         }
     },
     "train":{
         "device": "1",
         "epochs": 200,
+        "gradient_accum": 1,
         "lr": 1e-3,
         "criterion": "mse",
         "optimizer": "adam",
