@@ -1,5 +1,5 @@
 {
-    "exp_name": "transformer",
+    "exp_name": "transformer-latest",
     "mode": "train",
     "split":{
         "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
@@ -14,10 +14,17 @@
     },
     "dataset":{
         "ring_type": "ring2",
-        "input_type": ["ir-filtered", "red-filtered","ax-raw","ay-raw","az-raw"],
-        "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
+        "all_input_type": [
+            "ir-raw","ir-filtered","ir-standardized","ir-difference","ir-welch","ir-filtered-rr","ir-welch-rr",
+            "red-raw","red-filtered","red-standardized","red-difference","red-welch","red-filtered-rr","red-welch-rr",
+            "ax-raw","ax-filtered","ax-standardized","ax-difference","ax-welch","ax-filtered-rr","ax-welch-rr",
+            "ay-raw","ay-filtered","ay-standardized","ay-difference","ay-welch","ay-filtered-rr","ay-welch-rr",
+            "az-raw","az-filtered","az-standardized","az-difference","az-welch","az-filtered-rr","az-welch-rr"
+        ],
+        "input_type": ["ir-filtered-rr"],
+        "label_type": ["resp_rr"],
         "shuffle": true,
-        "batch_size": 32,
+        "batch_size": 16,
         "quality_assessment": {
             "method": "elgendi",
             "th": 0.8
@@ -26,7 +33,7 @@
         "window_duration": 30,
         "experiment": ["Health", "Daily","Sport"],
         "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"],
-        "accel_combined": true,
+        "accel_combined": false,
         "accel_combined_method": "magnitude"
     },
     "seed": 42,
@@ -37,7 +44,7 @@
         "type": "ML", 
         "model_path": null,
         "params":{
-            "in_channels": 3,  
+            "in_channels": 1,
             "len_sw": 3000,
             "n_classes": 1,  
             "dim": 128,
@@ -49,7 +56,7 @@
         }
     },
     "train":{
-        "device": "1",
+        "device": "0",
         "epochs": 200,
         "gradient_accum": 1,
         "lr": 1e-3,
@@ -57,7 +64,7 @@
         "optimizer": "adam",
         "early_stopping": {
             "monitor": "val_loss",
-            "patience": 30,
+            "patience": 200,
             "mode": "min"
         },
         "model_checkpoint": {
@@ -67,12 +74,11 @@
         }
     },
     "test":{
-        "device": "1",
+        "device": "0",
         "batch_size": 128,
         "metrics": ["mae", "rmse", "mape", "pearson"],
         "model_path": null,
         "model_name": null
     },
     "pretrain_model": "TODO"
-
 }
