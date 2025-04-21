@@ -32,7 +32,8 @@ from trainer.load_trainer import load_trainer
 4. Support InceptionTime/Mamba/transformer -wzy
 '''
 
-DATA_PATH = "/home/disk2/disk/3/tjk/RingData/Preprocessed/rings"
+# DATA_PATH = "/home/disk2/disk/3/tjk/RingData/Preprocessed/rings"
+DATA_PATH = "/home/dykderrick/mega/datasets/Preprocessed/rings"
 
 
 def generate_split_config(mode: str, config: Dict):

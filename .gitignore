@@ -12,3 +12,5 @@ logs/*.log
 .venv/
 
 config/exp/*
+
+.vscode/tasks.json

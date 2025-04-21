@@ -1,0 +1,5 @@
+resnet:
+    do_p: 0.3
+    final_do_p: 0.3 or false
+    kernel_size: 5
+    
