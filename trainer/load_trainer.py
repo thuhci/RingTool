@@ -1,29 +1,35 @@
+import json
 import logging
+import os
 from typing import Dict
+
 import torch
 import torch.nn as nn
+from torch.cuda.amp import GradScaler, autocast
 from tqdm import tqdm
-import os
-import numpy as np
-from scipy.stats import gaussian_kde
-import pandas as pd
-# from utils import *
-from utils.utils import calculate_metrics, plot_and_save_metrics,save_metrics_to_csv
+
+from nets.load_model import MODEL_CLASSES, SupportedSupervisedModels
 from unsupervised.hr.hr import get_hr
 from unsupervised.rr.rr import get_rr
 from unsupervised.spo2.spo2 import get_spo2
-from torch.cuda.amp import autocast, GradScaler
+from utils.utils import calculate_metrics, plot_and_save_metrics, save_metrics_to_csv
+
 
 class BaseTrainer:
     def __init__(self, model, config: Dict):
         self.config = config
-        if config["method"]["name"] in ["resnet", "transformer", "inception_time", "mamba2"]:
-            self.model = model
-            self.device = torch.device("cuda:" + str(config["train"]["device"]) 
-                                    if torch.cuda.is_available() and config["train"]["device"] != "cpu" 
-                                    else "cpu")
-            self.model.to(self.device)
 
+        model_name = SupportedSupervisedModels(config["method"]["name"].lower())  # Convert to enum
+        if model_name in MODEL_CLASSES:
+            self.model = model
+            self.device = torch.device(
+                "cuda:" + str(config["train"]["device"])
+                if torch.cuda.is_available() and config["train"]["device"] != "cpu"
+                else "cpu"
+            )
+            self.model.to(self.device)
+        else:
+            raise ValueError(f"Unsupported model: {config['method']['name']}")
 
     def load_optimizer(self):
         """加载优化器"""
@@ -40,7 +46,7 @@ class BaseTrainer:
     def test(self, test_loader, checkpoint_path=None, task=None):
         """测试模型"""
         raise NotImplementedError("子类需要实现 test 方法")
-    
+
 # -------------------------------
 # 非监督测试器
 # -------------------------------
@@ -360,17 +366,26 @@ class SupervisedTrainer(BaseTrainer):
 
 def load_trainer(model, model_name: str, config: Dict):
     """根据模型名称加载对应的训练器"""
-    if model_name in ["resnet", "transformer", "inception_time", "mamba2"]:
-        return SupervisedTrainer(model, config)
-    elif model_name in ["peak", "fft", "ratio"]:
+    # Case 1: Unsupervised models
+    if model_name in ["peak", "fft", "ratio"]:
         return UnsupervisedTester(model, config)
+    # Case 2: Supervised models
+    try:
+        # Convert model name to enum
+        _ = SupportedSupervisedModels(model_name.lower())
+        return SupervisedTrainer(model, config)
+    except ValueError:
+        # If the model name is not in the enum, it might be a custom model
+        logging.error(f"Model name '{model_name}' not found in SupportedSupervisedModels.")
+    
+    # Default case: return a base trainer
+    # This is a fallback and should not be reached if the above cases are handled correctly
+    # You can also add a warning or error log here if needed
+    logging.warning(f"Using BaseTrainer for model: {model_name}")
     return BaseTrainer(model, config)
 
 
 if __name__ == '__main__':
-    import argparse
-    import json
-
     def load_config(config_path):
         with open(config_path, 'r') as file:
             config = json.load(file)

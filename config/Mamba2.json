@@ -13,7 +13,7 @@
     }
     },
     "dataset":{
-        "ring_type": "ring2",
+        "ring_type": "ring1",
         "input_type": ["ir-filtered-rr"],
         "label_type": ["resp_rr"],
         "shuffle": true,
@@ -40,7 +40,7 @@
             "in_channels": 1,
             "len_sw": 3000,
             "n_classes": 1, 
-            "dim": 128,
+            "dim": 256,
             "depth": 2,
             "heads": 4,
             "mlp_dim": 64,
