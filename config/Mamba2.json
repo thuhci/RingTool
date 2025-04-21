@@ -1,5 +1,5 @@
 {
-    "exp_name": "mamba2",
+    "exp_name": "mamba2-latest",
     "mode": "train",
     "split":{
         "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
@@ -14,8 +14,8 @@
     },
     "dataset":{
         "ring_type": "ring2",
-        "input_type": ["ir-filtered", "red-filtered","ax-raw","ay-raw","az-raw"],
-        "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
+        "input_type": ["ir-filtered-rr"],
+        "label_type": ["resp_rr"],
         "shuffle": true,
         "batch_size": 16,
         "quality_assessment": {
@@ -26,20 +26,20 @@
         "window_duration": 30,
         "experiment": ["Health", "Daily","Sport"],
         "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"],
-        "accel_combined": true,
+        "accel_combined": false,
         "accel_combined_method": "magnitude"
     },
     "seed": 42,
-    "csv_path": "csv/transformer/transformer.csv",
-    "img_path": "img/transformer",
+    "csv_path": "csv/mamba2/mamba2.csv",
+    "img_path": "img/mamba2",
     "method": {
-        "name": "transformer",
+        "name": "mamba2",
         "type": "ML", 
         "model_path": null,
         "params":{
-            "in_channels": 3,  
+            "in_channels": 1,
             "len_sw": 3000,
-            "n_classes": 1,  
+            "n_classes": 1, 
             "dim": 128,
             "depth": 2,
             "heads": 4,
@@ -49,7 +49,7 @@
         }
     },
     "train":{
-        "device": "1",
+        "device": "0",
         "epochs": 200,
         "gradient_accum": 1,
         "lr": 1e-3,
@@ -57,7 +57,7 @@
         "optimizer": "adam",
         "early_stopping": {
             "monitor": "val_loss",
-            "patience": 30,
+            "patience": 200,
             "mode": "min"
         },
         "model_checkpoint": {
@@ -67,12 +67,11 @@
         }
     },
     "test":{
-        "device": "1",
+        "device": "0",
         "batch_size": 128,
         "metrics": ["mae", "rmse", "mape", "pearson"],
         "model_path": null,
         "model_name": null
     },
     "pretrain_model": "TODO"
-
 }

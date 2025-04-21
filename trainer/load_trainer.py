@@ -17,7 +17,7 @@ from torch.cuda.amp import autocast, GradScaler
 class BaseTrainer:
     def __init__(self, model, config: Dict):
         self.config = config
-        if config["method"]["name"] in ["resnet", "transformer", "inception_time"]:
+        if config["method"]["name"] in ["resnet", "transformer", "inception_time", "mamba2"]:
             self.model = model
             self.device = torch.device("cuda:" + str(config["train"]["device"]) 
                                     if torch.cuda.is_available() and config["train"]["device"] != "cpu" 
@@ -360,7 +360,7 @@ class SupervisedTrainer(BaseTrainer):
 
 def load_trainer(model, model_name: str, config: Dict):
     """根据模型名称加载对应的训练器"""
-    if model_name in ["resnet", "transformer", "inception_time"]:
+    if model_name in ["resnet", "transformer", "inception_time", "mamba2"]:
         return SupervisedTrainer(model, config)
     elif model_name in ["peak", "fft", "ratio"]:
         return UnsupervisedTester(model, config)
