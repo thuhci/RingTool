@@ -253,7 +253,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
     parser.add_argument('--batch-configs-dir', type=str, default=None, help='Path to the configuration JSON files directory. Will execute all exps in the dir.')
-    parser.add_argument('--send-notification-slack', type=bool, default=False, help='Send notification to slack.')
+    parser.add_argument('--send-notification-slack', action="store_true", help='Send notification to slack.')
     parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
     # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
     # parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
