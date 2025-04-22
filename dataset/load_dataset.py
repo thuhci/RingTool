@@ -1,15 +1,19 @@
 import logging
-from typing import Dict, List
-import torch
-from torch.utils.data import Dataset, DataLoader
-from tqdm import tqdm
-import pandas as pd
 import os
-import pickle
-import numpy as np
-import random
-from utils.utils import calculate_metrics, save_metrics_to_csv, extract_accel_features_cuda
+from enum import Enum
+from typing import Dict, List
 
+import numpy as np
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
+from tqdm import tqdm
+
+from utils.utils import (
+    calculate_metrics,
+    extract_accel_features_cuda,
+    save_metrics_to_csv,
+)
 
 accel_channels = {
     "ax-raw","ax-filtered","ax-standardized","ax-difference","ax-welch","ax-filtered-rr","ax-welch-rr",
@@ -17,8 +21,28 @@ accel_channels = {
     "az-raw","az-filtered","az-standardized","az-difference","az-welch","az-filtered-rr","az-welch-rr"
 }
 
+available_tasks = ['hr', 'bvp_hr', 'bvp_sdnn', 'bvp_rmssd',
+       'bvp_nn50', 'bvp_pnn50', 'resp_rr', 'spo2', 'samsung_hr', 'oura_hr',
+       'BP_sys', 'BP_dia']
 
-def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None):
+class DatasetType(Enum):
+    TRAIN = "train"
+    VALID = "valid"
+    TEST = "test"
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def from_string(cls, string: str):
+        if string in cls._value2member_map_:
+            return cls(string)
+        else:
+            raise ValueError(f"Invalid dataset type: {string}. Choose from {list(cls._value2member_map_.keys())}.")
+
+
+
+def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None, dataset_type=DatasetType.TRAIN):
     """
     Load the dataset for the specified task.
     Args:
@@ -26,27 +50,26 @@ def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels:
         raw_data (pd.DataFrame): Raw data DataFrame.
         task (str): Task name. Default is "hr".
         channels (List): List of channels to load. Default is None.
+        dataset_type (DatasetType): Type of dataset (train, valid, test). Default is DatasetType.TRAIN.
     Returns:
-        List: List of tuples containing signal tensors and labels.
+        Dataset: Loaded dataset.
     """
-    if task not in ['hr', 'bvp_hr', 'bvp_sdnn', 'bvp_rmssd',
-       'bvp_nn50', 'bvp_pnn50', 'resp_rr', 'spo2', 'samsung_hr', 'oura_hr',
-       'BP_sys', 'BP_dia']:
-        raise ValueError("Invalid task. Choose from 'hr', 'bvp_hr', 'bvp_sdnn', 'bvp_rmssd', 'bvp_nn50', 'bvp_pnn50', 'resp_rr', 'spo2', 'samsung_hr', 'oura_hr', 'BP_sys', 'BP_dia'")
-        return [(torch.randn(201, 1), torch.randn(1))]
+    if task not in available_tasks:
+        logging.error(f"Invalid task: {task}. Choose from {available_tasks}.")
+        raise ValueError(f"Invalid task. Choose from {available_tasks}.")
     # Load Data
-    return LoadDataset(config, raw_data, task=task, channels=channels)
+    return LoadDataset(config, raw_data, task=task, channels=channels, dataset_type=dataset_type)
     
 
 class LoadDataset(Dataset):
-    def __init__(self, config: Dict, raw_data: pd.DataFrame, channels: List, task: str="hr"):
+    def __init__(self, config: Dict, raw_data: pd.DataFrame, channels: List, task="hr", dataset_type=DatasetType.TRAIN):
         self.task = task
+        self.dataset_type = dataset_type
         self.raw_data = raw_data
         self.config = config
         self.channels = channels
         self.load_data()
-        # import ipdb; ipdb.set_trace()
-    
+
         
     def load_data(self):
         self.data = []
@@ -180,7 +203,7 @@ class LoadDataset(Dataset):
                 metrics = {"note": "No data available for metrics calculation"}
             
             
-        logging.info(f"Loaded {len(self)} samples for task {self.task} with channels {self.channels}")
+        logging.info(f"Loaded {len(self)} samples for task {self.task} with channels {self.channels} for dataset type {self.dataset_type}.")
 
     def __len__(self):
         return len(self.data)

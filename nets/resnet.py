@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
-import numpy as np
+
+from nets.se_layer import SELayer
 
 
 class MyConv1dPadSame(nn.Module):
@@ -154,12 +154,14 @@ class ResNet1D(nn.Module):
         use_bn: whether to use BatchNorm
         use_do: whether to use Dropout in blocks
         dropout_p: the probability for dropout layers in blocks (NEW)
+        use_se: whether to use Squeeze-and-Excitation block before final dense layer (NEW)
+        se_reduction: reduction ratio for the SE block (NEW, default 16)
         verbose: print shapes during forward pass
         backbone: if True, return features before final dense layer
         output_dim: output dimension (1 for regression, n_classes for classification) - Modified default to 1 for regression
     """
-    # Add dropout_p to __init__
-    def __init__(self, in_channels, base_filters, kernel_size, stride, groups, n_block, downsample_gap=2, increasefilter_gap=4, use_bn=True, use_do=True, dropout_p=0.5, use_final_do=False, final_dropout_p=0.5, verbose=False, backbone=False, output_dim=1): # Default output_dim=1
+    # Add use_se and se_reduction to __init__
+    def __init__(self, in_channels, base_filters, kernel_size, stride, groups, n_block, downsample_gap=2, increasefilter_gap=4, use_bn=True, use_do=True, dropout_p=0.5, use_final_do=False, final_dropout_p=0.5, use_se=False, se_reduction=16, verbose=False, backbone=False, output_dim=1): # Default output_dim=1
         super(ResNet1D, self).__init__()
         self.out_dim = output_dim
         self.backbone = backbone
@@ -175,6 +177,8 @@ class ResNet1D(nn.Module):
         self.final_dropout_p = final_dropout_p
         self.downsample_gap = downsample_gap
         self.increasefilter_gap = increasefilter_gap
+        self.use_se = use_se # Store use_se flag
+        self.se_reduction = se_reduction # Store se_reduction
 
         # first block
         self.first_block_conv = MyConv1dPadSame(in_channels=in_channels, out_channels=base_filters, kernel_size=self.kernel_size, stride=1)
@@ -186,17 +190,8 @@ class ResNet1D(nn.Module):
         self.basicblock_list = nn.ModuleList()
         for i_block in range(self.n_block):
             is_first_block = i_block == 0
-            downsample = (i_block + 1) % self.downsample_gap == 0 # Corrected logic? Check if this matches original intent
+            downsample = (i_block + 1) % self.downsample_gap == 0
             
-            # Correctly calculate in_channels and out_channels based on previous block's output
-            current_in_channels = base_filters * (2**((i_block) // self.increasefilter_gap))
-            current_out_channels = base_filters * (2**((i_block + 1) // self.increasefilter_gap)) # Simpler way to think about it
-
-            # Ensure correct channel handling for the very first block
-            if is_first_block:
-                 current_in_channels = base_filters
-                 current_out_channels = base_filters # Usually doesn't change channels in the first block unless increasefilter_gap=1
-
             # Refined channel calculation logic
             block_in_channels = out_channels # Channels from the previous layer/block
             # Increase filters every increasefilter_gap blocks
@@ -222,8 +217,14 @@ class ResNet1D(nn.Module):
         # final prediction
         self.final_bn = nn.BatchNorm1d(out_channels)
         self.final_relu = nn.ReLU(inplace=True)
+
+        # Instantiate SE Layer if use_se is True
+        if self.use_se:
+            self.se_layer = SELayer(out_channels, reduction=self.se_reduction)
+
         if self.use_final_do:
             self.final_dropout = nn.Dropout(p=self.final_dropout_p)
+
         self.dense = nn.Linear(out_channels, self.out_dim) # Use self.out_dim
         # Removed dense2 as backbone logic handles feature output
 
@@ -256,6 +257,12 @@ class ResNet1D(nn.Module):
         if self.use_bn:
             out = self.final_bn(out)
         out = self.final_relu(out) # Apply final activation
+
+        # Apply SE Layer if enabled, before pooling
+        if self.use_se:
+            out = self.se_layer(out)
+            if self.verbose:
+                print('after SE layer', out.shape)
 
         # Global Average Pooling
         out = out.mean(dim=-1) # Pool across the sequence length dimension

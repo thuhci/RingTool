@@ -18,3 +18,5 @@ config/exp/*
 nohup.out
 
 *.toml
+
+.ruff_cache

@@ -210,20 +210,48 @@ class SupervisedTrainer(BaseTrainer):
                 # Gradient accumulation
 
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
+
+                # Check for NaNs or large values in inputs
+                if torch.isnan(inputs).any() or torch.isinf(inputs).any():
+                    logging.error(f"NaN or Inf found in inputs at epoch {epoch+1}, batch {idx}. Skipping batch.")
+                    continue
+                if inputs.abs().max() > 1e6: # Check for abnormally large values (threshold can be adjusted)
+                     logging.warning(f"Input values might be too large at epoch {epoch+1}, batch {idx}. Max value: {inputs.abs().max()}")
+
+
                 with autocast():
                     outputs, _ = self.model(inputs)
                     loss = self.criterion(outputs, labels)
+
+                # Check for NaNs in loss
+                if torch.isnan(loss):
+                    logging.error(f"NaN loss detected at epoch {epoch+1}, batch {idx}. Skipping optimizer step.")
+                    # Optionally: investigate inputs/outputs/labels that caused NaN
+                    # logging.error(f"Inputs max: {inputs.max()}, min: {inputs.min()}")
+                    # logging.error(f"Outputs: {outputs}")
+                    # logging.error(f"Labels: {labels}")
+                    continue # Skip backpropagation for this batch if loss is NaN
+
                 scaled_loss = scaler.scale(loss)
                 scaled_loss = scaled_loss / self.gradient_accum
                 scaled_loss.backward()
+
                 if (idx + 1) % self.gradient_accum == 0:
+                    # Add gradient clipping before the optimizer step
+                    scaler.unscale_(self.optimizer) # Unscale gradients before clipping
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0) # Clip gradients (max_norm=1.0 is a common starting point)
+
                     scaler.step(self.optimizer)
                     scaler.update()
                     self.optimizer.zero_grad()
                 train_loss += loss.item() / self.gradient_accum
 
             if len(train_loader) % self.gradient_accum != 0:
-                self.optimizer.step()
+                # Apply gradient clipping here as well if the last step wasn't taken inside the loop
+                scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                scaler.step(self.optimizer)
+                scaler.update() # scaler.update() should be called once per iteration, typically after optimizer.step()
                 self.optimizer.zero_grad()
             
             # 验证阶段

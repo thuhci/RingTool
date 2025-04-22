@@ -11,7 +11,6 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import toml
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -20,10 +19,11 @@ from scipy.signal import butter, filtfilt, get_window, welch
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 
-from dataset.load_dataset import load_dataset
+from dataset.load_dataset import DatasetType, load_dataset
 from nets.load_model import load_model
 from notifications.slack import send_slack_message, setup_slack
 from trainer.load_trainer import load_trainer
+from utils.utils import format_results_to_markdown
 
 # TODO: 
 '''
@@ -126,7 +126,7 @@ def unsupervised(config_path):
             logging.info(f"Test results for task {task}: {test_results}")
 
 
-def main(config_path):
+def supervised(config_path) -> List[Dict]:
     config = load_config(config_path)
     # load all data
     all_data = find_all_data(DATA_PATH, config["dataset"]["ring_type"])
@@ -156,6 +156,7 @@ def main(config_path):
         channels = config["dataset"]["input_type"]
         tasks = config["dataset"]["label_type"]
         logging.info(f"Channels: {channels}, Task: {tasks}")
+        all_test_results = []
         for task in tasks:
             # load model
             model = load_model(config['method'])
@@ -177,7 +178,8 @@ def main(config_path):
                     config=config,
                     raw_data=train_data,
                     channels=channels,
-                    task=train_task
+                    task=train_task,
+                    dataset_type=DatasetType.TRAIN
                 )
                 train_loader = DataLoader(train_dataset, batch_size=config["dataset"]["batch_size"], shuffle=True)
                 
@@ -186,7 +188,8 @@ def main(config_path):
                     config=config,
                     raw_data=valid_data,
                     channels=channels,
-                    task=task
+                    task=task,
+                    dataset_type=DatasetType.VALID
                 )
                 valid_loader = DataLoader(valid_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
                 
@@ -199,13 +202,19 @@ def main(config_path):
                 config=config,
                 raw_data=test_data,
                 channels=channels,
-                task=task
+                task=task,
+                dataset_type=DatasetType.TEST
             )
             test_loader = DataLoader(test_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
             test_results = trainer.test(test_loader,checkpoint_path,task)
+            all_test_results.append(test_results)
+        
+        return all_test_results
 
 
-def do_run_experiment(config_path: str):
+
+
+def do_run_experiment(config_path: str, send_notification_slack=False):
     """Loads config, sets up logging, and runs the experiment."""
     try:
         config = load_config(config_path)
@@ -234,33 +243,51 @@ def do_run_experiment(config_path: str):
 
         start_time = time.time()
 
+        all_test_results = []
+
         if config.get("method", {}).get("type") == "unsupervised":
             logging.info("Running unsupervised method.")
             unsupervised(config_path)
         else:
             logging.info("Running supervised method.")
-            main(config_path)
+            all_test_results = supervised(config_path)
 
         end_time = time.time()
         logging.info(f"Experiment {exp_name} finished in {end_time - start_time:.2f} seconds.")
+        if send_notification_slack:
+            client = setup_slack()
+            if all_test_results: # Check if there are results to format
+                results_markdown = format_results_to_markdown(all_test_results)
+                # Use backticks for experiment name for better visibility
+                message = f"✅ Experiment `{exp_name}` finished successfully. Here are the results: \n\n {results_markdown}"
+            else: # Handle cases with no specific test results (e.g., unsupervised run finished)
+                message = f"✅ Experiment `{exp_name}` finished successfully. (No specific test results to display)."
+            send_slack_message(client, "#training-notifications", message)
+            
 
     except Exception as e:
         logging.error(f"Error running experiment with config {config_path}: {e}", exc_info=True)
+        if send_notification_slack:
+            client = setup_slack()
+            send_slack_message(client, "#training-notifications", f"❌ Experiment {exp_name} failed with error: {e}")
 
 
 if __name__ == '__main__':
+    config_path = "./config/Resnet.json"
+    # config_path = "./config/Transformer.json"
+    # config_path = "./config/Mamba2.json"
+    # config_path = "./config/InceptionTime.json"
+
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
     parser.add_argument('--batch-configs-dir', type=str, default=None, help='Path to the configuration JSON files directory. Will execute all exps in the dir.')
     parser.add_argument('--send-notification-slack', action="store_true", help='Send notification to slack.')
-    parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
+    parser.add_argument('--config', type=str, default=config_path, help='Path to the configuration JSON file.')
     args = parser.parse_args()
     
     batch_configs_dir = args.batch_configs_dir
+    send_notification_slack = args.send_notification_slack
     if batch_configs_dir:
         logging.info(f"Running experiments from directory: {batch_configs_dir}")
         config_files = [f for f in os.listdir(batch_configs_dir) if f.endswith(".json")]
@@ -269,16 +296,12 @@ if __name__ == '__main__':
         else:
             for config_file in config_files:
                 full_config_path = os.path.join(batch_configs_dir, config_file)
-                do_run_experiment(full_config_path)
+                do_run_experiment(full_config_path, send_notification_slack)
         logging.info("Finished all experiments in batch.")
     elif args.config:
-        do_run_experiment(args.config)
+        do_run_experiment(args.config, send_notification_slack)
     else:
         # This case should ideally not happen if argparse requires 'config' when 'batch_configs_dir' is not given,
         # but added for robustness.
         logging.error("No configuration file or directory specified. Use --config or --batch-configs-dir.")
         parser.print_help()
-
-    if args.send_notification_slack:
-        client = setup_slack()
-        send_slack_message(client, "#training-notifications", "Training complete.")
