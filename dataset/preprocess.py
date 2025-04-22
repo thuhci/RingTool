@@ -1,12 +1,8 @@
-import os
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from scipy.signal import find_peaks, welch, butter, filtfilt
-from scipy.interpolate import interp1d
 from neurokit2 import ppg_peaks, ppg_quality
-from tqdm import tqdm
-import pdb
+from scipy.interpolate import interp1d
+from scipy.signal import butter, filtfilt, find_peaks, welch
+
 
 def calculate_sampling_rate(timestamps):
     """Calculate the sampling rate based on the time difference between consecutive timestamps."""
@@ -105,7 +101,7 @@ def single_signal_quality_assessment(signal, fs, method_quality='templatematch',
     
     # Check if the signal is too short or has no variation
     if len(signal_filtered) < 10 or np.all(signal_filtered == signal_filtered[0]):
-        print(f"Warning: Signal is too short or constant. Skipping quality assessment.")
+        print("Warning: Signal is too short or constant. Skipping quality assessment.")
         return 0 # Return a high value indicating poor quality
 
     if method_quality in ['templatematch', 'dissimilarity']:

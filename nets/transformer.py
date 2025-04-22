@@ -1,17 +1,10 @@
-import torch
-from torch import nn
-from einops import rearrange, repeat
-from torch.autograd import Variable
-import math
-import torch.nn.functional as F
-
-import torch
-from torch import nn
-from einops import rearrange, repeat
-import math
-import torch.nn.functional as F
-
 from functools import wraps
+
+import torch
+import torch.nn.functional as F
+from einops import rearrange, repeat
+from torch import nn
+
 
 def timer(func):
     @wraps(func)

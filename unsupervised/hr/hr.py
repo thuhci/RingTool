@@ -1,8 +1,6 @@
-import os
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from scipy.signal import find_peaks, welch, butter, filtfilt
+from scipy.signal import butter, filtfilt, find_peaks, welch
+
 
 def bandpass_filter(data, lowcut=0.5, highcut=3, fs=30, order=3):
     """Apply a bandpass filter to the data."""

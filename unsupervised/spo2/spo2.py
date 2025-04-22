@@ -1,6 +1,5 @@
 import numpy as np
-from scipy.signal import find_peaks
-import pandas as pd
+
 
 def get_spo2(ppg_ir, ppg_red, fs=100, ring_type="ring1", method="ratio"):
     """

@@ -6,18 +6,12 @@ import os
 import random
 import time
 import warnings
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from scipy.signal import butter, filtfilt, get_window, welch
-from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 
 from dataset.load_dataset import DatasetType, load_dataset
 from nets.load_model import load_model
@@ -33,7 +27,7 @@ from utils.utils import format_results_to_markdown
 4. Support InceptionTime/Mamba/transformer -wzy
 '''
 
-DATA_PATH = "/home/disk2/disk/3/tjk/RingData/Preprocessed/rings"
+DATA_PATH = "/home/dykderrick/mega/datasets/Preprocessed/rings"
 
 
 def generate_split_config(mode: str, config: Dict):

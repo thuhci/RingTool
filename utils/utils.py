@@ -185,10 +185,10 @@ def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=No
     xy = np.vstack([target_np, pred_np])
     try:
         z = gaussian_kde(xy)(xy)
-        scatter = ax.scatter(target_np, pred_np, c=z, s=30, alpha=0.8)
+        _ = ax.scatter(target_np, pred_np, c=z, s=30, alpha=0.8)
     except np.linalg.LinAlgError:
         # Fallback if KDE fails
-        scatter = ax.scatter(target_np, pred_np, s=30, alpha=0.5)
+        _ = ax.scatter(target_np, pred_np, s=30, alpha=0.5)
     
     # Draw the perfect prediction line
     max_val = max(np.max(pred_np), np.max(target_np))
@@ -225,9 +225,9 @@ def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=No
     try:
         xy = np.vstack([averages, differences])
         z = gaussian_kde(xy)(xy)
-        scatter = ax.scatter(averages, differences, c=z, s=30, alpha=0.8)
+        _ = ax.scatter(averages, differences, c=z, s=30, alpha=0.8)
     except np.linalg.LinAlgError:
-        scatter = ax.scatter(averages, differences, s=30, alpha=0.5)
+        _ = ax.scatter(averages, differences, s=30, alpha=0.5)
     
     # Add mean and confidence intervals
     mean_diff = np.mean(differences)

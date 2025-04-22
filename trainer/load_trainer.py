@@ -305,13 +305,7 @@ class SupervisedTrainer(BaseTrainer):
                         early_stop = True
 
             if scheduler:
-                prev_lr = self.optimizer.param_groups[0]['lr']
                 scheduler.step(valid_loss_avg)
-                current_lr = self.optimizer.param_groups[0]['lr']
-                # if current_lr < prev_lr:
-                #     logging.info(f"Epoch {epoch+1}: Reduced learning rate from {prev_lr:.8f} to {current_lr:.8f} due to plateau.")
-                # else:
-                #     logging.info(f"Epoch {epoch+1}: Learning rate unchanged at {current_lr:.8f}.")
 
             progress_bar.set_postfix(
                 epoch=f"{epoch+1}/{epochs}",
