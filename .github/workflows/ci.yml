@@ -33,3 +33,23 @@ jobs:
       
     - name: Run pre-commit hooks
       run: pre-commit run --all-files
+
+  check_pyc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find .pyc files
+        id: find_pyc
+        run: |
+          find . -name "*.pyc" -print0 | while IFS= read -r -d $'\0' file; do
+            echo "::warning file=$file::Found a .pyc file."
+            echo "found_pyc=true" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Fail if .pyc files are found
+        if: steps.find_pyc.outputs.found_pyc == 'true'
+        run: |
+          echo "Error: .pyc files should not be included in the repository."
+          exit 1
