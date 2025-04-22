@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import toml
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,8 +22,8 @@ from torch.utils.data import DataLoader, Dataset
 
 from dataset.load_dataset import load_dataset
 from nets.load_model import load_model
+from notifications.slack import send_slack_message, setup_slack
 from trainer.load_trainer import load_trainer
-
 
 # TODO: 
 '''
@@ -252,6 +253,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
     parser.add_argument('--batch-configs-dir', type=str, default=None, help='Path to the configuration JSON files directory. Will execute all exps in the dir.')
+    parser.add_argument('--send-notification-slack', type=bool, default=False, help='Send notification to slack.')
     parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
     # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
     # parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
@@ -276,3 +278,7 @@ if __name__ == '__main__':
         # but added for robustness.
         logging.error("No configuration file or directory specified. Use --config or --batch-configs-dir.")
         parser.print_help()
+
+    if args.send_notification_slack:
+        client = setup_slack()
+        send_slack_message(client, "#training-notifications", "Training complete.")

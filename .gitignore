@@ -14,3 +14,7 @@ logs/*.log
 config/exp/*
 
 .vscode/tasks.json
+
+nohup.out
+
+*.toml
