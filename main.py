@@ -158,14 +158,9 @@ def main(config_path):
         for task in tasks:
             # load model
             model = load_model(config['method'])
-<<<<<<< HEAD
             logging.info(f"Successfully loaded model {config['method']}")
             logging.info(f"Model params: {sum(p.numel() for p in model.parameters())}")
             logging.info(f"Running experiment with split config: {split_config}")
-=======
-            logging.info(f"Successfully loaded model {json.dumps(config['method'], indent=4)}")
-            logging.info(f"Running experiment with split config: {json.dumps(split_config, indent=4)}")
->>>>>>> 0b5cfe5762a4106f07462732acb3faf845071ad4
 
             trainer = load_trainer(model, config['method']['name'], config)
             
@@ -213,16 +208,10 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
-<<<<<<< HEAD
-    #parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
-    #parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
-    parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
-    #parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
-=======
     parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
-    # parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
->>>>>>> 0b5cfe5762a4106f07462732acb3faf845071ad4
+    #parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
+    #parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
+    #parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
     args = parser.parse_args()
     # Load the configuration
     config = load_config(args.config)

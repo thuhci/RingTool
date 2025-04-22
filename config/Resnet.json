@@ -14,8 +14,8 @@
     },
     "dataset":{
         "ring_type": "ring2",
-        "input_type": ["ir-filtered", "red-filtered","ax-filtered","ay-filtered","az-filtered"],
-        "label_type": ["samsung_hr","oura_hr","hr", "spo2", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
+        "input_type": ["ir-raw", "red-raw"],
+        "label_type": ["spo2", "samsung_hr","oura_hr","hr", "bvp_sdnn","resp_rr","BP_sys","BP_dia"],
         "shuffle": true,
         "batch_size": 32,
         "quality_assessment": {
@@ -35,7 +35,7 @@
         "type": "ML", 
         "model_path": null,
         "params":{
-            "in_channels": 5,  
+            "in_channels": 2,  
             "base_filters": 32,
             "kernel_size": 5,
             "stride": 1,
@@ -49,8 +49,8 @@
     "train":{
         "device": "0",
         "epochs": 300,
-        "lr": 5e-4,
-        "criterion": "mse",
+        "lr": 1e-4,
+        "criterion": "mae",
         "optimizer": "adamw",
         "early_stopping": {
             "monitor": "val_loss",

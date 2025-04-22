@@ -195,7 +195,7 @@ class TaoBERT(nn.Module):
 
     def forward(self, x):
         # x shape: (batch, seq_len, channels)
-        x = x.permute(0, 2, 1).unsqueeze(-1)  # 转换为conv格式
+        x = x.permute(0, 2, 1).unsqueeze(-1)/1e6  # 转换为conv格式
         
         # 投影处理 [batch, new_seq_len, dim]
         x = self.projection(x)

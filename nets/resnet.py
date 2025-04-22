@@ -210,12 +210,13 @@ class ResNet1D(nn.Module):
         self.final_bn = nn.BatchNorm1d(out_channels)
         self.final_relu = nn.ReLU(inplace=True)
         # self.do = nn.Dropout(p=0.5)
-        self.dense = nn.Linear(out_channels, 1)
+        self.dense = nn.Linear(out_channels, 2)
         self.dense2 = nn.Linear(out_channels, self.out_dim)
         # self.softmax = nn.Softmax(dim=1)
-        
+
     def forward(self, x):
         # import ipdb; ipdb.set_trace()
+        x = x/1e6
         x = x.transpose(-1,-2) # RESNET 1D takes channels first
         out = x
         # first conv
@@ -253,5 +254,6 @@ class ResNet1D(nn.Module):
         # return out_class, out    
         out_value = self.dense(out)
         # the output size is (bs, 1), squeeze it to (bs, )
-        out_value = out_value.squeeze(-1)
-        return out_value, out
+        #out_value = out_value.squeeze(-1)
+        x1, x2 = out_value[:, 0], out_value[:, 1]
+        return x2/(x1+x2)*100, out
