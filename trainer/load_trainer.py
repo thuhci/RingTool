@@ -146,6 +146,8 @@ class SupervisedTrainer(BaseTrainer):
             self.criterion = nn.CrossEntropyLoss()
         elif criterion_type == "mse":
             self.criterion = nn.MSELoss()
+        elif criterion_type == "mae":
+            self.criterion = lambda x,y:(x-y).abs().mean()
         else:
             raise ValueError(f"Unsupported criterion type: {criterion_type}")
 
