@@ -11,6 +11,17 @@
             "args": []
         },
         {
+            "name": "Python: main.py (batch configs)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "internalConsole",
+            "justMyCode": true,
+            "args": [
+                "--batch-configs-dir", "${input:batchConfigsDir}"
+            ],
+        },
+        {
             "name": "Python: main.py (custom config)",
             "type": "debugpy",
             "request": "launch",
@@ -20,6 +31,20 @@
             "args": [
                 "--config", "${input:configPath}"
             ]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "batchConfigsDir",
+            "type": "promptString",
+            "description": "Directory containing batch configuration files",
+            "default": "config/exp/dropout_p"
+        },
+        {
+            "id": "configPath",
+            "type": "promptString",
+            "description": "Path to custom configuration file",
+            "default": "config/Resnet.json"
         }
     ]
 }

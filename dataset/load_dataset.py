@@ -54,7 +54,7 @@ class LoadDataset(Dataset):
         target_fs = self.config.get("dataset", {}).get("target_fs", 100)
         window_duration = self.config.get("dataset", {}).get("window_duration", 30)
         dataset_task_list = self.config.get("dataset", {}).get("task",["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"])
-        print(f"Load dataset from scenarios: {dataset_task_list}")
+        logging.info(f"Load dataset from scenarios: {dataset_task_list}")
         # Calculate target length or use default
         if target_fs and window_duration:
             target_length = target_fs * window_duration

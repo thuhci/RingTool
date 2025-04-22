@@ -1,0 +1,7 @@
+repos:
+  - repo: local
+    hooks:
+      - id: forbid-pyc
+        name: Block .pyc files
+        entry: bash -c "if git diff --cached --name-only | grep -E '\\.pyc$'; then echo '❌ No .pyc files allowed'; exit 1; fi"
+        language: system

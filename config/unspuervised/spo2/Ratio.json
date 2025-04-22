@@ -13,7 +13,7 @@
     }
     },
     "dataset":{
-        "ring_type": "ring2",
+        "ring_type": "ring1",
         "input_type": ["ir-raw","red-raw"],
         "label_type": ["spo2"],
         "shuffle": true,
@@ -25,7 +25,7 @@
         "target_fs": 100,
         "window_duration": 30,
         "experiment": ["Health", "Daily","Sport"],
-        "task": ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"]
+        "task": ["spo2"]
     },
     "seed": 42,
     "csv_path": "csv/ratio/ratio.csv",

@@ -1,5 +1,13 @@
 # RingTool
 ## Description
+
+**Prevent pushing pyc files into Git**.
+```sh
+pip install pre-commit
+pre-commit install
+```
+
+
 RingTool is an open platform for health sensing and data analysis with smart rings. It provides a set of tools and libraries for developers to create applications that can interact with smart rings, collect data, and perform analysis on that data. The platform is designed to be flexible and extensible, allowing developers to build custom solutions for a wide range of health and wellness applications.
 
 ## Features

@@ -8,3 +8,13 @@ csv/
 logs/*.log
 *.pyc
 */__pycache__/
+
+.venv/
+
+config/exp/*
+
+.vscode/tasks.json
+
+nohup.out
+
+*.toml

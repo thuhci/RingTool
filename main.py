@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import toml
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,8 +22,8 @@ from torch.utils.data import DataLoader, Dataset
 
 from dataset.load_dataset import load_dataset
 from nets.load_model import load_model
+from notifications.slack import send_slack_message, setup_slack
 from trainer.load_trainer import load_trainer
-
 
 # TODO: 
 '''
@@ -63,7 +64,7 @@ def generate_split_config(mode: str, config: Dict):
 
 
     
-def load_config(config_path):
+def load_config(config_path: str):
     with open(config_path, 'r') as file:
         config = json.load(file)
     return config
@@ -204,47 +205,80 @@ def main(config_path):
             test_results = trainer.test(test_loader,checkpoint_path,task)
 
 
+def do_run_experiment(config_path: str):
+    """Loads config, sets up logging, and runs the experiment."""
+    try:
+        config = load_config(config_path)
+        exp_name = config.get("exp_name", os.path.splitext(os.path.basename(config_path))[0]) # Use filename if exp_name not in config
+
+        # Set up logging
+        os.makedirs("logs", exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%m%d%H%M")
+        log_filename = f"logs/rtool-{exp_name}-{timestamp}.log"
+
+        # Remove existing handlers if any, to avoid duplicate logs when running multiple configs
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
+
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(log_filename),
+                logging.StreamHandler()
+            ]
+        )
+        logging.getLogger('matplotlib').setLevel(logging.INFO) # Reduce matplotlib verbosity
+        logging.info(f"Starting experiment: {exp_name} from config: {config_path}")
+        logging.info(f"Logging to: {log_filename}")
+
+        start_time = time.time()
+
+        if config.get("method", {}).get("type") == "unsupervised":
+            logging.info("Running unsupervised method.")
+            unsupervised(config_path)
+        else:
+            logging.info("Running supervised method.")
+            main(config_path)
+
+        end_time = time.time()
+        logging.info(f"Experiment {exp_name} finished in {end_time - start_time:.2f} seconds.")
+
+    except Exception as e:
+        logging.error(f"Error running experiment with config {config_path}: {e}", exc_info=True)
+
+
 if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
+    parser.add_argument('--batch-configs-dir', type=str, default=None, help='Path to the configuration JSON files directory. Will execute all exps in the dir.')
+    parser.add_argument('--send-notification-slack', action="store_true", help='Send notification to slack.')
     parser.add_argument('--config', type=str, default="./config/Resnet.json", help='Path to the configuration JSON file.')
-    #parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
-    #parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
-    #parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
+    # parser.add_argument('--config', type=str, default="./config/Transformer.json", help='Path to the configuration JSON file.')
+    # parser.add_argument('--config', type=str, default="./config/Mamba2.json", help='Path to the configuration JSON file.')
+    # parser.add_argument('--config', type=str, default="./config/InceptionTime.json", help='Path to the configuration JSON file.')
     args = parser.parse_args()
-    # Load the configuration
-    config = load_config(args.config)
-    exp_name = config.get("exp_name")
-
-    # Set up logging
-    # Create logs directory if it doesn't exist
-    os.makedirs("logs", exist_ok=True)
     
-    # Get current timestamp for the log filename
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"logs/ringtool_{exp_name}_{timestamp}.log"
-
-    # Set up file and console logging
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_filename),
-            logging.StreamHandler()
-        ]
-    )
-    logging.getLogger('matplotlib').setLevel(logging.INFO)
-    logging.info(f"Logging to: {log_filename}")
-
-    start_time = time.time()
-    if config["method"]["type"] == "unsupervised":
-        # unsupervised methods
-        unsupervised(args.config)
+    batch_configs_dir = args.batch_configs_dir
+    if batch_configs_dir:
+        logging.info(f"Running experiments from directory: {batch_configs_dir}")
+        config_files = [f for f in os.listdir(batch_configs_dir) if f.endswith(".json")]
+        if not config_files:
+            logging.warning(f"No JSON config files found in {batch_configs_dir}")
+        else:
+            for config_file in config_files:
+                full_config_path = os.path.join(batch_configs_dir, config_file)
+                do_run_experiment(full_config_path)
+        logging.info("Finished all experiments in batch.")
+    elif args.config:
+        do_run_experiment(args.config)
     else:
-        # supervised methods
-        main(args.config)
+        # This case should ideally not happen if argparse requires 'config' when 'batch_configs_dir' is not given,
+        # but added for robustness.
+        logging.error("No configuration file or directory specified. Use --config or --batch-configs-dir.")
+        parser.print_help()
 
-
-    # Existing code execution
-    logging.info(f"Exp {exp_name} Finished in {time.time() - start_time:.2f} seconds")
+    if args.send_notification_slack:
+        client = setup_slack()
+        send_slack_message(client, "#training-notifications", "Training complete.")

@@ -13,7 +13,7 @@
     }
     },
     "dataset":{
-        "ring_type": "ring2",
+        "ring_type": "ring1",
         "input_type": ["ir-filtered"],
         "label_type": ["samsung_hr","oura_hr","hr"],
         "shuffle": true,
