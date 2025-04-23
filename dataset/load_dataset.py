@@ -49,16 +49,16 @@ def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels:
         channels (List): List of channels to load. Default is None.
         dataset_type (DatasetType): Type of dataset (train, valid, test). Default is DatasetType.TRAIN.
     Returns:
-        Dataset: Loaded dataset.
+        RingToolDataset: Loaded dataset.
     """
     if task not in available_tasks:
         logging.error(f"Invalid task: {task}. Choose from {available_tasks}.")
         raise ValueError(f"Invalid task. Choose from {available_tasks}.")
     # Load Data
-    return LoadDataset(config, raw_data, task=task, channels=channels, dataset_type=dataset_type)
-    
+    return RingToolDataset(config, raw_data, task=task, channels=channels, dataset_type=dataset_type)
 
-class LoadDataset(Dataset):
+
+class RingToolDataset(Dataset):
     def __init__(self, config: Dict, raw_data: pd.DataFrame, channels: List, task="hr", dataset_type=DatasetType.TRAIN):
         self.task = task
         self.dataset_type = dataset_type

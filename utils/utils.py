@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,7 +76,7 @@ def value_with_std(value, std):
     """Return value with standard error: value±std"""
     return f"{value:.2f}±{std:.2f}"
 
-def calculate_metrics(predictions, targets):
+def calculate_metrics(predictions, targets) -> Dict:
     """Calculate all metrics"""
     mae, mae_std = calculate_mae(predictions, targets)
     rmse, rmse_std = calculate_rmse(predictions, targets)
@@ -94,7 +95,18 @@ def calculate_metrics(predictions, targets):
         "pearson_with_std": value_with_std(pearson, pearson_std)
     }
 
-def save_metrics_to_csv(metrics, config, task, result_csv_path=None):
+
+def calculate_avg_metrics(all_preds_and_targets: List[Tuple]) -> Dict:
+    all_preds = torch.cat([p_and_t[0] for p_and_t in all_preds_and_targets])
+    all_targets = torch.cat([p_and_t[1] for p_and_t in all_preds_and_targets])
+
+    assert len(all_preds) == len(all_targets), "Predictions and targets must have the same length"
+    metrics = calculate_metrics(all_preds, all_targets)
+
+    return metrics
+
+
+def save_metrics_to_csv(metrics: Dict, config: Dict, task: str, result_csv_path=None) -> str:
     """
     Save evaluation metrics to a CSV file
     
@@ -148,7 +160,8 @@ def save_metrics_to_csv(metrics, config, task, result_csv_path=None):
     logging.info(f"Saved results to {result_csv_path}")
     return result_csv_path
 
-def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=None):
+
+def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=None) -> str:
     """
     Generate and save visualization plots comparing predictions and targets
     

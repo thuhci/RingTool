@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 from typing import Dict
@@ -6,6 +5,7 @@ from typing import Dict
 import torch
 import torch.nn as nn
 from torch.cuda.amp import GradScaler, autocast
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from nets.load_model import MODEL_CLASSES, SupportedSupervisedModels
@@ -161,7 +161,7 @@ class SupervisedTrainer(BaseTrainer):
         else:
             raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
 
-    def fit(self, train_loader, valid_loader, task=None):
+    def fit(self, train_loader, valid_loader, task=None) -> str:
         scaler = GradScaler(enabled=True)
         epochs = self.config.get("train", {}).get("epochs", 200)
         best_loss = float('inf')  # For metrics like loss where lower is better
@@ -340,7 +340,7 @@ class SupervisedTrainer(BaseTrainer):
         
         return best_checkpoint_path
 
-    def test(self, test_loader, checkpoint_path,task):
+    def test(self, test_loader: DataLoader, checkpoint_path: str, task: str):
         # Load the best checkpoint if provided
         if checkpoint_path and os.path.exists(checkpoint_path):
             logging.info(f"Loading best model checkpoint from: {checkpoint_path}")
@@ -372,15 +372,16 @@ class SupervisedTrainer(BaseTrainer):
               f"MAPE: {metrics['mape']:.2f}%, Pearson: {metrics['pearson']:.4f}")
         
         # Save metrics to CSV
-        save_metrics_to_csv(metrics, self.config, task)
+        _ = save_metrics_to_csv(metrics, self.config, task)
         # Plot and save metrics
-        plot_and_save_metrics(predictions=all_preds, targets=all_targets, config=self.config, task=task)
+        _ = plot_and_save_metrics(predictions=all_preds, targets=all_targets, config=self.config, task=task)
        
         if self.eval_func is not None:
             score = self.eval_func(all_preds, all_targets)
             logging.debug(f"Custom evaluation score: {score}")
 
         return {
+            "preds_and_targets": (all_preds, all_targets),
             "loss": test_loss / len(test_loader),
             **metrics
         }
@@ -408,14 +409,3 @@ def load_trainer(model, model_name: str, config: Dict):
     # You can also add a warning or error log here if needed
     logging.warning(f"Using BaseTrainer for model: {model_name}")
     return BaseTrainer(model, config)
-
-
-if __name__ == '__main__':
-    def load_config(config_path):
-        with open(config_path, 'r') as file:
-            config = json.load(file)
-        return config
-
-    config = load_config("/home/disk2/disk/3/tjk/RingTool/config/Resnet.json")
-    print(config)
-    print(config.get("img_path"))

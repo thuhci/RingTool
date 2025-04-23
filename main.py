@@ -6,7 +6,7 @@ import os
 import random
 import time
 import warnings
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -21,7 +21,7 @@ from notifications.slack import (
     setup_slack,
 )
 from trainer.load_trainer import load_trainer
-
+from utils.utils import calculate_avg_metrics, save_metrics_to_csv
 
 DATA_PATH = "/home/disk2/disk/3/tjk/RingData/Preprocessed/rings"
 
@@ -63,6 +63,7 @@ def load_config(config_path: str):
         config = json.load(file)
     return config
 
+
 def find_all_data(path, ring_type) -> Dict[str, pd.DataFrame]:
     # load all subject data from a folder, subject_ring1_processed.pkl
     all_data = {}  # subject_id -> pd.DF
@@ -81,6 +82,7 @@ def find_all_data(path, ring_type) -> Dict[str, pd.DataFrame]:
                 continue
     return all_data
 
+
 def set_seed(seed: int):
     """Set the random seed for reproducibility."""
     random.seed(seed)
@@ -88,6 +90,7 @@ def set_seed(seed: int):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
 
 def unsupervised(config_path):   
     config = load_config(config_path)
@@ -121,7 +124,7 @@ def unsupervised(config_path):
             logging.info(f"Test results for task {task}: {test_results}")
 
 
-def supervised(config_path) -> List[Dict]:
+def supervised(config_path) -> List[Tuple[str, str, Dict]]:
     config = load_config(config_path)
     mode = config["mode"]
     all_data = find_all_data(DATA_PATH, config["dataset"]["ring_type"])
@@ -149,14 +152,16 @@ def supervised(config_path) -> List[Dict]:
     logging.info(f"Generated {len(split_configs)} split configurations.")
  
     all_test_results = []
-    for split_config in split_configs:
-        logging.info(f"Now running experiment with split config: {split_config}")
-        config['fold'] = split_config["fold"]
+    tasks = config["dataset"]["label_type"]
+    for task in tasks:
+        logging.info(f"Running experiment for task: {task}")
+        all_preds_and_targets: List[Tuple] = []
         # Extract channels and task from config
         channels = config["dataset"]["input_type"]
-        tasks = config["dataset"]["label_type"]
         logging.info(f"Channels: {channels}, Task: {tasks}")
-        for task in tasks:
+        for split_config in split_configs:
+            config["fold"] = split_config["fold"]  # TODO: remove dynamic config setter
+            logging.info(f"Now running experiment with split config: {split_config}")      
             # load model
             model = load_model(config['method'])
             logging.info(f"Successfully loaded model {config['method']}")
@@ -205,9 +210,28 @@ def supervised(config_path) -> List[Dict]:
                 dataset_type=DatasetType.TEST
             )
             test_loader = DataLoader(test_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
-            test_results = trainer.test(test_loader,checkpoint_path,task)
+            test_results = trainer.test(test_loader, checkpoint_path, task)
+            preds_and_targets = test_results["preds_and_targets"]
+            all_preds_and_targets.append(preds_and_targets)
+
             all_test_results.append((split_config["fold"], task, test_results))
-        
+
+        metrics = calculate_avg_metrics(all_preds_and_targets)
+        logging.critical(f"Average metrics across all tasks: "
+                f"MAE: {metrics['mae']:.4f}, RMSE: {metrics['rmse']:.4f}, "
+                f"MAPE: {metrics['mape']:.2f}%, Pearson: {metrics['pearson']:.4f}")
+
+        # Save overall metrics to CSV
+        config["fold"] = "all-folds"  # TODO: remove dynamic config setter
+        save_metrics_to_csv(metrics, config, task)
+        # # Plot and save metrics
+        # plot_and_save_metrics(
+        #     predictions=torch.cat([p_and_t[0] for p_and_t in all_preds_and_targets]),
+        #     targets=torch.cat([p_and_t[1] for p_and_t in all_preds_and_targets]),
+        #     config=config,
+        #     task=task,
+        # )
+
     return all_test_results
 
 
@@ -254,7 +278,7 @@ def do_run_experiment(config_path: str, send_notification_slack=False):
         if send_notification_slack:
             client = setup_slack()
             if all_test_results: # Check if there are results to format
-                slack_msg_blocks = format_results_to_slack_blocks(all_test_results[0])  # TODO: Handle multiple tasks if needed
+                slack_msg_blocks = format_results_to_slack_blocks(all_test_results[0][2])  # TODO: Handle multiple tasks if needed  # BUG: error data format due to attr updates
                 # Use backticks for experiment name for better visibility
                 message = f"✅ Experiment `{exp_name}` finished successfully. Here are the results.\n"
             else: # Handle cases with no specific test results (e.g., unsupervised run finished)
