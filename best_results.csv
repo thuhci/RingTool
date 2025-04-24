@@ -39,6 +39,18 @@ resnet-latest,train,ring1,Fold-1,hr,['red-filtered'],"['sitting', 'spo2', 'deeps
 resnet-latest,train,ring2,Fold-1,hr,['red-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,228,4.22±0.26,5.81±1.99,5.56±0.36,0.84±0.04
 resnet-latest,train,ring1,Fold-1,resp_rr,['ir-filtered-rr'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,81,4.88±0.29,5.52±1.74,29.17±2.47,0.36±0.10
 resnet-latest,train,ring2,Fold-1,resp_rr,['ir-filtered-rr'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,69,3.48±0.32,4.34±1.86,21.36±3.52,0.09±0.12
+resnet-latest-only-ir,5fold,ring1,Fold-1,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,219,3.91±0.23,5.21±1.77,5.49±0.34,0.89±0.03
+resnet-latest-only-ir,5fold,ring1,Fold-2,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,305,2.85±0.19,4.37±1.90,3.62±0.22,0.90±0.03
+resnet-latest-only-ir,5fold,ring1,Fold-3,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,463,2.64±0.19,4.81±2.52,3.43±0.32,0.92±0.02
+resnet-latest-only-ir,5fold,ring1,Fold-4,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,193,3.65±0.23,4.85±1.66,4.14±0.28,0.92±0.03
+resnet-latest-only-ir,5fold,ring1,Fold-5,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,326,4.05±0.15,4.84±1.27,5.37±0.20,0.94±0.02
+resnet-latest-only-ir,5fold,ring1,all-folds,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,1506,3.30±0.09,4.80±1.48,4.28±0.13,0.92±0.01
+resnet-latest-only-ir,test,ring1,Fold-1,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,219,3.91±0.23,5.21±1.77,5.49±0.34,0.89±0.03
+resnet-latest-only-ir,test,ring1,Fold-1,hr,['ir-filtered'],['sitting'],resnet,200,0.001,mse,128,133,3.78±0.28,4.98±1.83,5.26±0.40,0.90±0.04
+resnet-latest-only-ir,test,ring1,Fold-1,hr,['ir-filtered'],['spo2'],resnet,200,0.001,mse,128,72,3.38±0.35,4.50±2.17,4.91±0.58,0.93±0.04
+resnet-latest-only-ir,test,ring1,Fold-1,hr,['ir-filtered'],['deepsquat'],resnet,200,0.001,mse,128,1,5.01±nan,5.01±nan,6.60±nan,0.00±inf
+resnet-latest-only-ir,test,ring1,Fold-1,hr,['ir-filtered'],['talking'],resnet,200,0.001,mse,128,11,8.80±1.44,9.91±5.36,11.88±1.96,0.20±0.33
+resnet-latest-only-ir,test,ring1,Fold-1,hr,['ir-filtered'],['shaking_head'],resnet,200,0.001,mse,128,2,4.44±3.96,5.95±5.93,6.18±5.59,1.00±inf
 inception-time-latest,train,ring1,Fold-1,samsung_hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",inception_time,200,0.001,mse,128,16,5.61±1.33,7.62±4.84,6.86±1.51,0.75±0.18
 inception-time-latest,train,ring2,Fold-1,samsung_hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",inception_time,200,0.001,mse,128,8,4.68±1.20,5.66±4.04,6.46±1.78,0.72±0.28
 inception-time-latest,train,ring1,Fold-1,oura_hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",inception_time,200,0.001,mse,128,27,5.13±0.65,6.11±2.95,6.70±0.82,0.86±0.10

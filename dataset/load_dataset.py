@@ -70,10 +70,10 @@ class RingToolDataset(Dataset):
         self.raw_data = raw_data
         self.config = config
         self.channels = channels
-        self.load_data()
+        self._load_data()
 
         
-    def load_data(self):
+    def _load_data(self):
         self.data = []
         # Get target_length from config or use default of 3000
         target_fs = self.config.get("dataset", {}).get("target_fs", 100)
@@ -211,6 +211,8 @@ class RingToolDataset(Dataset):
             
             
         logging.info(f"Loaded {len(self)} samples for task {self.task} with channels {self.channels} for dataset type {self.dataset_type}.")
+        if len(self) == 0:
+            logging.warning(f"No data loaded for task {self.task} with channels {self.channels} for dataset type {self.dataset_type}. Please check your data and configuration.")
 
     def __len__(self):
         return len(self.data)
