@@ -182,7 +182,7 @@ def supervised(config_path: str) -> List[Tuple[str, str, Dict]]:
 
             trainer = load_trainer(model, config['method']['name'], config)
             
-            train_task = "hr" if task == "oura_hr" or "samsung_hr" else task
+            train_task = "hr" if task in ["oura_hr", "samsung_hr"] else task
 
             if "train" in split_config and (mode == "train" or mode == "5fold"):
                 # prepare training dataset
