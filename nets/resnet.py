@@ -265,7 +265,8 @@ class ResNet1D(nn.Module):
                 print('after SE layer', out.shape)
 
         # Global Average Pooling
-        out = out.mean(dim=-1) # Pool across the sequence length dimension
+        out = out.mean(dim=-1) # Pool across the sequence length dimension. Works better.
+        # out = out[..., -1]
         if self.verbose:
             print('final pooling', out.shape)
 
