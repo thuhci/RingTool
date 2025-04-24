@@ -47,18 +47,17 @@ def generate_split_config(mode: str, split: Dict) -> List[Dict]:
                     train_p.extend(split['5-Fold'][f'Fold-{j}'])
             
             split_config.append({"train": train_p, "valid": valid_p, "test": test_p, "fold": f"Fold-{test_fold}"})
-    elif mode == "train":
+    elif mode == "train" or mode == "test":
         # split into train, valid, test
         split_config.append({"train": split['train'], "valid": split['valid'], "test": split['test'], "fold": "Fold-1"})
     
     else:
-        logging.error("Invalid mode. Choose '5fold' or 'train'.")
-        raise ValueError("Invalid mode. Choose '5fold' or 'train'.")
+        logging.error(f"Invalid mode. Choose from {AVAILABLE_MODES}.")
+        raise ValueError(f"Invalid mode. Choose from {AVAILABLE_MODES}.")
     return split_config
 
 
-    
-def load_config(config_path: str):
+def load_config(config_path: str) -> Dict:
     with open(config_path, 'r') as file:
         config = json.load(file)
     return config
@@ -124,9 +123,10 @@ def unsupervised(config_path):
             logging.info(f"Test results for task {task}: {test_results}")
 
 
-def supervised(config_path) -> List[Tuple[str, str, Dict]]:
+def supervised(config_path: str) -> List[Tuple[str, str, Dict]]:
     config = load_config(config_path)
-    mode = config["mode"]
+    mode = config["mode"]  # "train", "test", "5fold"
+    exp_name = config.get("exp_name")
     all_data = find_all_data(DATA_PATH, config["dataset"]["ring_type"])
     subject_list = list(all_data.keys())
 
@@ -148,7 +148,6 @@ def supervised(config_path) -> List[Tuple[str, str, Dict]]:
             if split_type in split_config:
                 # Filter out subjects that don't exist in available data
                 split_config[split_type] = [subj for subj in split_config[split_type] if subj in subject_list]
-    
     logging.info(f"Generated {len(split_configs)} split configurations.")
  
     all_test_results = []
@@ -160,8 +159,21 @@ def supervised(config_path) -> List[Tuple[str, str, Dict]]:
         channels = config["dataset"]["input_type"]
         logging.info(f"Channels: {channels}, Task: {tasks}")
         for split_config in split_configs:
-            config["fold"] = split_config["fold"]  # TODO: remove dynamic config setter
-            logging.info(f"Now running experiment with split config: {split_config}")      
+            current_fold = split_config["fold"]
+            config["fold"] = current_fold  # TODO: remove dynamic config setter
+
+            checkpoint_path = None
+            # for testing, use the checkpoint path
+            if mode == "test":
+                checkpoint_dir = os.path.join("models", exp_name, task, current_fold)
+                best_checkpoint_path = os.path.join(checkpoint_dir, f"{exp_name}_{task}_{current_fold}_best.pt")
+                if os.path.exists(best_checkpoint_path):
+                    checkpoint_path = best_checkpoint_path
+                else:
+                    logging.error(f"Checkpoint {checkpoint_path} not found. Maybe you need to train the model first.")
+                    raise FileNotFoundError(f"Checkpoint {checkpoint_path} not found. Maybe you need to train the model first.")
+
+            logging.info(f"Now running experiment {current_fold} with split config: {split_config}")      
             # load model
             model = load_model(config['method'])
             logging.info(f"Successfully loaded model {config['method']}")
@@ -170,12 +182,9 @@ def supervised(config_path) -> List[Tuple[str, str, Dict]]:
 
             trainer = load_trainer(model, config['method']['name'], config)
             
-            if task == "oura_hr" or "samsung_hr":
-                train_task = "hr"
-            else: 
-                train_task = task
+            train_task = "hr" if task == "oura_hr" or "samsung_hr" else task
 
-            if "train" in split_config:
+            if "train" in split_config and (mode == "train" or mode == "5fold"):
                 # prepare training dataset
                 train_data = pd.concat([all_data[p] for p in split_config["train"]])
                 train_dataset = load_dataset(
@@ -198,7 +207,8 @@ def supervised(config_path) -> List[Tuple[str, str, Dict]]:
                 valid_loader = DataLoader(valid_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
                 
                 # Train the model
-                checkpoint_path = trainer.fit(train_loader, valid_loader, task)
+                checkpoint_path = trainer.fit(train_loader, valid_loader, task, current_fold)
+                logging.info(f"Model trained and saved to {checkpoint_path}.")
         
             # test model 
             test_data = pd.concat([all_data[p] for p in split_config["test"]])
@@ -207,7 +217,8 @@ def supervised(config_path) -> List[Tuple[str, str, Dict]]:
                 raw_data=test_data,
                 channels=channels,
                 task=task,
-                dataset_type=DatasetType.TEST
+                dataset_type=DatasetType.TEST,
+                scenarios=config["dataset"]["task"],  # TODO: naming issue
             )
             test_loader = DataLoader(test_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
             test_results = trainer.test(test_loader, checkpoint_path, task)
@@ -236,7 +247,12 @@ def supervised(config_path) -> List[Tuple[str, str, Dict]]:
 
 
 def do_run_experiment(config_path: str, send_notification_slack=False):
-    """Loads config, sets up logging, and runs the experiment."""
+    """
+    Run the experiment based on the provided configuration file.
+    Args:
+        config_path (str): Path to the configuration JSON file.
+        send_notification_slack (bool): If True, send notification to Slack.
+    """
     try:
         config = load_config(config_path)
         exp_name = config.get("exp_name", os.path.splitext(os.path.basename(config_path))[0]) # Use filename if exp_name not in config
@@ -280,7 +296,7 @@ def do_run_experiment(config_path: str, send_notification_slack=False):
             if all_test_results: # Check if there are results to format
                 slack_msg_blocks = format_results_to_slack_blocks(all_test_results[0][2])  # TODO: Handle multiple tasks if needed  # BUG: error data format due to attr updates
                 # Use backticks for experiment name for better visibility
-                message = f"✅ Experiment `{exp_name}` finished successfully. Here are the results.\n"
+                message = f"✅ Experiment `{exp_name}` finished successfully. Here are the results."
             else: # Handle cases with no specific test results (e.g., unsupervised run finished)
                 message = f"✅ Experiment `{exp_name}` finished successfully. (No specific test results to display)."
                 slack_msg_blocks = None

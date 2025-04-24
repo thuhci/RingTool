@@ -40,7 +40,7 @@ class BaseTrainer:
         """加载损失函数"""
         raise NotImplementedError("子类需要实现 load_criterion 方法")
 
-    def fit(self, train_loader, valid_loader, task=None):
+    def fit(self, train_loader, valid_loader, task=None, fold=None):
         """训练模型"""
         raise NotImplementedError("子类需要实现 fit 方法")
 
@@ -63,7 +63,7 @@ class UnsupervisedTester(BaseTrainer):
         # Not needed for unsupervised testing
         pass
 
-    def fit(self, train_loader, valid_loader, task=None):
+    def fit(self, train_loader, valid_loader, task=None, fold=None):
         # Not used in unsupervised approach
         logging.info("Unsupervised methods do not require fitting/training")
         return None
@@ -161,7 +161,7 @@ class SupervisedTrainer(BaseTrainer):
         else:
             raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
 
-    def fit(self, train_loader, valid_loader, task=None) -> str:
+    def fit(self, train_loader, valid_loader, task=None, fold=None) -> str:
         scaler = GradScaler(enabled=True)
         epochs = self.config.get("train", {}).get("epochs", 200)
         best_loss = float('inf')  # For metrics like loss where lower is better
@@ -191,11 +191,12 @@ class SupervisedTrainer(BaseTrainer):
                 min_lr=min_lr,           # lower bound on LR
                 verbose=True             # log messages
             )
-        checkpoint_dir = os.path.join("models", self.config.get("exp_name"),task)
-        model_name = self.config.get("exp_name")
+        exp_name = self.config.get("exp_name", "default_experiment")
+        checkpoint_dir = os.path.join("models", exp_name, task, fold)
+        model_name = exp_name
         
         os.makedirs(checkpoint_dir, exist_ok=True)
-        best_checkpoint_path = os.path.join(checkpoint_dir, f"{model_name}_best.pt")
+        best_checkpoint_path = os.path.join(checkpoint_dir, f"{model_name}_{task}_{fold}_best.pt")
         if self.gradient_accum > 1:
             logging.info(f"Training with gradient accumulation: {self.gradient_accum} steps")
         

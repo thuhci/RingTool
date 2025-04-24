@@ -22,6 +22,9 @@ available_tasks = ['hr', 'bvp_hr', 'bvp_sdnn', 'bvp_rmssd',
        'bvp_nn50', 'bvp_pnn50', 'resp_rr', 'spo2', 'samsung_hr', 'oura_hr',
        'BP_sys', 'BP_dia']
 
+
+all_scenarios = ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"]
+
 class DatasetType(Enum):
     TRAIN = "train"
     VALID = "valid"
@@ -39,7 +42,7 @@ class DatasetType(Enum):
 
 
 
-def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None, dataset_type=DatasetType.TRAIN):
+def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None, dataset_type=DatasetType.TRAIN, scenarios: List[str]=None):
     """
     Load the dataset for the specified task.
     Args:
@@ -48,6 +51,7 @@ def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels:
         task (str): Task name. Default is "hr".
         channels (List): List of channels to load. Default is None.
         dataset_type (DatasetType): Type of dataset (train, valid, test). Default is DatasetType.TRAIN.
+        scenarios (List[str]): List of scenarios to be loaded. If None, **all scenarios** will be loaded. We recommend set scenarios to None during training and validation, and per demand for testing.
     Returns:
         RingToolDataset: Loaded dataset.
     """
@@ -55,13 +59,14 @@ def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels:
         logging.error(f"Invalid task: {task}. Choose from {available_tasks}.")
         raise ValueError(f"Invalid task. Choose from {available_tasks}.")
     # Load Data
-    return RingToolDataset(config, raw_data, task=task, channels=channels, dataset_type=dataset_type)
+    return RingToolDataset(config, raw_data, task=task, channels=channels, dataset_type=dataset_type, scenarios=scenarios)
 
 
 class RingToolDataset(Dataset):
-    def __init__(self, config: Dict, raw_data: pd.DataFrame, channels: List, task="hr", dataset_type=DatasetType.TRAIN):
+    def __init__(self, config: Dict, raw_data: pd.DataFrame, channels: List, task="hr", dataset_type=DatasetType.TRAIN, scenarios: List[str]=None):
         self.task = task
         self.dataset_type = dataset_type
+        self.scenarios = scenarios
         self.raw_data = raw_data
         self.config = config
         self.channels = channels
@@ -73,8 +78,13 @@ class RingToolDataset(Dataset):
         # Get target_length from config or use default of 3000
         target_fs = self.config.get("dataset", {}).get("target_fs", 100)
         window_duration = self.config.get("dataset", {}).get("window_duration", 30)
-        dataset_task_list = self.config.get("dataset", {}).get("task",["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"])
-        logging.info(f"Load dataset from scenarios: {dataset_task_list}")
+        # dataset_scenario_list = self.config.get("dataset", {}).get("task", all_scenarios)
+
+        if self.scenarios is not None:
+            logging.info(f"Scenario mode on. Loading {self.dataset_type} dataset from scenarios: {self.scenarios}.")
+        else:
+            logging.info(f"Scenario mode off. Loading {self.dataset_type} dataset from all scenarios: {all_scenarios}.")
+
         # Calculate target length or use default
         if target_fs and window_duration:
             target_length = target_fs * window_duration
@@ -95,7 +105,7 @@ class RingToolDataset(Dataset):
             skip_sample = False
             if self.raw_data.iloc[i]['ir-quality'] < quality_th or self.raw_data.iloc[i]['red-quality'] < quality_th:
                 continue
-            if self.raw_data.iloc[i]["Label"] not in dataset_task_list:
+            if self.scenarios is not None and self.raw_data.iloc[i]["Label"] not in self.scenarios:  # Filter out data not in scenarios.
                 continue
 
             accels_data = {}  # handle accels data separately
