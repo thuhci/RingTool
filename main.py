@@ -23,7 +23,6 @@ from notifications.slack import (
 from trainer.load_trainer import load_trainer
 from utils.utils import calculate_avg_metrics, save_metrics_to_csv
 
-DATA_PATH = "/home/disk2/disk/3/tjk/RingData/PreprocessedV2/rings"
 
 AVAILABLE_MODES = ["train", "test", "5fold"]
 
@@ -91,10 +90,9 @@ def set_seed(seed: int):
         torch.cuda.manual_seed_all(seed)
 
 
-def unsupervised(config_path):   
-    config = load_config(config_path)
+def unsupervised(config: Dict, data_path: str) -> None:   
     # load all data
-    all_data = find_all_data(DATA_PATH, config["dataset"]["ring_type"])
+    all_data = find_all_data(data_path, config["dataset"]["ring_type"])
     subject_list = list(all_data.keys())
     all_data = pd.concat(all_data.values())
     logging.info(f"Found {len(subject_list)} subjects in the data folder.") 
@@ -123,11 +121,10 @@ def unsupervised(config_path):
             logging.info(f"Test results for task {task}: {test_results}")
 
 
-def supervised(config_path: str) -> List[Tuple[str, str, Dict]]:
-    config = load_config(config_path)
+def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
     mode = config["mode"]  # "train", "test", "5fold"
     exp_name = config.get("exp_name")
-    all_data = find_all_data(DATA_PATH, config["dataset"]["ring_type"])
+    all_data = find_all_data(data_path, config["dataset"]["ring_type"])
     subject_list = list(all_data.keys())
 
     logging.info(f"Found {len(subject_list)} subjects in the data folder.")
@@ -246,37 +243,40 @@ def supervised(config_path: str) -> List[Tuple[str, str, Dict]]:
     return all_test_results
 
 
-def do_run_experiment(config_path: str, send_notification_slack=False):
+def setup_logging(exp_name: str):
+    # Set up logging
+    os.makedirs("logs", exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%m%d-%H%M%S")
+    log_filename = f"logs/rtool-{exp_name}-{timestamp}.log"
+
+    # Remove existing handlers if any, to avoid duplicate logs when running multiple configs
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_filename),
+            logging.StreamHandler()
+        ]
+    )
+    logging.getLogger('matplotlib').setLevel(logging.INFO) # Reduce matplotlib verbosity
+    logging.info(f"Starting experiment: {exp_name} from config: {config_path}")
+    logging.info(f"Logging to: {log_filename}")
+
+
+def do_run_experiment(config: Dict, data_path: str, send_notification_slack=False):
     """
     Run the experiment based on the provided configuration file.
     Args:
-        config_path (str): Path to the configuration JSON file.
+        config (Dict): experiment config.
         send_notification_slack (bool): If True, send notification to Slack.
     """
     try:
-        config = load_config(config_path)
         exp_name = config.get("exp_name", os.path.splitext(os.path.basename(config_path))[0]) # Use filename if exp_name not in config
 
-        # Set up logging
-        os.makedirs("logs", exist_ok=True)
-        timestamp = datetime.datetime.now().strftime("%m%d-%H%M%S")
-        log_filename = f"logs/rtool-{exp_name}-{timestamp}.log"
-
-        # Remove existing handlers if any, to avoid duplicate logs when running multiple configs
-        for handler in logging.root.handlers[:]:
-            logging.root.removeHandler(handler)
-
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_filename),
-                logging.StreamHandler()
-            ]
-        )
-        logging.getLogger('matplotlib').setLevel(logging.INFO) # Reduce matplotlib verbosity
-        logging.info(f"Starting experiment: {exp_name} from config: {config_path}")
-        logging.info(f"Logging to: {log_filename}")
+        setup_logging(exp_name)
 
         start_time = time.time()
 
@@ -284,10 +284,10 @@ def do_run_experiment(config_path: str, send_notification_slack=False):
 
         if config.get("method", {}).get("type") == "unsupervised":
             logging.info("Running unsupervised method.")
-            unsupervised(config_path)
+            unsupervised(config, data_path)
         else:
             logging.info("Running supervised method.")
-            all_test_results = supervised(config_path)
+            all_test_results = supervised(config, data_path)
 
         end_time = time.time()
         logging.info(f"Experiment {exp_name} finished in {end_time - start_time:.2f} seconds.")
@@ -319,25 +319,32 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 
     parser = argparse.ArgumentParser(description='Process ring PPG data using FFT.')
+    parser.add_argument('--data-path', type=str, default="/home/disk2/disk/3/tjk/RingData/PreprocessedV2/rings", help='Path to the data folder.')
     parser.add_argument('--batch-configs-dir', type=str, default=None, help='Path to the configuration JSON files directory. Will execute all exps in the dir.')
     parser.add_argument('--send-notification-slack', action="store_true", help='Send notification to slack.')
     parser.add_argument('--config', type=str, default=config_path, help='Path to the configuration JSON file.')
     args = parser.parse_args()
+
+    data_path = args.data_path
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Data path {data_path} does not exist.")
+    if not os.path.isdir(data_path):
+        raise NotADirectoryError(f"Data path {data_path} is not a directory.")
     
     batch_configs_dir = args.batch_configs_dir
     send_notification_slack = args.send_notification_slack
     if batch_configs_dir:
-        logging.info(f"Running experiments from directory: {batch_configs_dir}")
         config_files = [f for f in os.listdir(batch_configs_dir) if f.endswith(".json")]
-        if not config_files:
-            logging.warning(f"No JSON config files found in {batch_configs_dir}")
-        else:
-            for config_file in config_files:
-                full_config_path = os.path.join(batch_configs_dir, config_file)
-                do_run_experiment(full_config_path, send_notification_slack)
+        for config_file in config_files:
+            full_config_path = os.path.join(batch_configs_dir, config_file)
+
+            config = load_config(full_config_path)
+
+            do_run_experiment(config, data_path, send_notification_slack)
         logging.info("Finished all experiments in batch.")
     elif args.config:
-        do_run_experiment(args.config, send_notification_slack)
+        config = load_config(args.config)
+        do_run_experiment(config, data_path, send_notification_slack)
     else:
         # This case should ideally not happen if argparse requires 'config' when 'batch_configs_dir' is not given,
         # but added for robustness.
