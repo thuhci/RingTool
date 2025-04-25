@@ -1,6 +1,5 @@
 import logging
 import os
-from enum import Enum
 from typing import Dict, List
 
 import numpy as np
@@ -9,37 +8,14 @@ import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
+from constants.dataset import (
+    ACCEL_CHANNELS,
+    ALL_SCENARIOS,
+    AVAILABLE_TASKS,
+    DatasetType,
+)
 from utils.accel_features import extract_accel_features_cuda
 from utils.utils import calculate_metrics, save_metrics_to_csv
-
-accel_channels = {
-    "ax-raw","ax-filtered","ax-standardized","ax-difference","ax-welch","ax-filtered-rr","ax-welch-rr",
-    "ay-raw","ay-filtered","ay-standardized","ay-difference","ay-welch","ay-filtered-rr","ay-welch-rr",
-    "az-raw","az-filtered","az-standardized","az-difference","az-welch","az-filtered-rr","az-welch-rr"
-}
-
-available_tasks = ['hr', 'bvp_hr', 'bvp_sdnn', 'bvp_rmssd',
-       'bvp_nn50', 'bvp_pnn50', 'resp_rr', 'spo2', 'samsung_hr', 'oura_hr',
-       'BP_sys', 'BP_dia']
-
-
-all_scenarios = ["sitting", "spo2", "deepsquat", "talking", "shaking_head", "standing", "striding"]
-
-class DatasetType(Enum):
-    TRAIN = "train"
-    VALID = "valid"
-    TEST = "test"
-
-    def __str__(self):
-        return self.value
-
-    @classmethod
-    def from_string(cls, string: str):
-        if string in cls._value2member_map_:
-            return cls(string)
-        else:
-            raise ValueError(f"Invalid dataset type: {string}. Choose from {list(cls._value2member_map_.keys())}.")
-
 
 
 def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None, dataset_type=DatasetType.TRAIN, scenarios: List[str]=None):
@@ -55,9 +31,9 @@ def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels:
     Returns:
         RingToolDataset: Loaded dataset.
     """
-    if task not in available_tasks:
-        logging.error(f"Invalid task: {task}. Choose from {available_tasks}.")
-        raise ValueError(f"Invalid task. Choose from {available_tasks}.")
+    if task not in AVAILABLE_TASKS:
+        logging.error(f"Invalid task: {task}. Choose from {AVAILABLE_TASKS}.")
+        raise ValueError(f"Invalid task. Choose from {AVAILABLE_TASKS}.")
     # Load Data
     return RingToolDataset(config, raw_data, task=task, channels=channels, dataset_type=dataset_type, scenarios=scenarios)
 
@@ -78,12 +54,12 @@ class RingToolDataset(Dataset):
         # Get target_length from config or use default of 3000
         target_fs = self.config.get("dataset", {}).get("target_fs", 100)
         window_duration = self.config.get("dataset", {}).get("window_duration", 30)
-        # dataset_scenario_list = self.config.get("dataset", {}).get("task", all_scenarios)
+        # dataset_scenario_list = self.config.get("dataset", {}).get("task", ALL_SCENARIOS)
 
         if self.scenarios is not None:
             logging.info(f"Scenario mode on. Loading {self.dataset_type} dataset from scenarios: {self.scenarios}.")
         else:
-            logging.info(f"Scenario mode off. Loading {self.dataset_type} dataset from all scenarios: {all_scenarios}.")
+            logging.info(f"Scenario mode off. Loading {self.dataset_type} dataset from all scenarios: {ALL_SCENARIOS}.")
 
         # Calculate target length or use default
         if target_fs and window_duration:
@@ -131,7 +107,7 @@ class RingToolDataset(Dataset):
                     channel_data = np.concatenate([channel_data, padding])
                 
                 # if config: accel_combined set to True, handle accels separately
-                if accel_combined and channel in accel_channels:
+                if accel_combined and channel in ACCEL_CHANNELS:
                     accels_data[channel] = channel_data
                     continue
 

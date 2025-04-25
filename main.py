@@ -13,6 +13,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
+from constants.experiment import ExperimentMode
 from dataset.load_dataset import DatasetType, load_dataset
 from nets.load_model import load_model
 from notifications.slack import (
@@ -24,14 +25,11 @@ from trainer.load_trainer import load_trainer
 from utils.utils import calculate_avg_metrics, save_metrics_to_csv
 
 
-AVAILABLE_MODES = ["train", "test", "5fold"]
-
-
 def generate_split_config(mode: str, split: Dict) -> List[Dict]:
     split_config = []
     # 5-fold cross-validation.
     # if test set is fold 4, then valid set is fold 5 and train set is 1, 2, 3 train set is fold 1, 2, 3
-    if mode == "5fold" or mode == "test":
+    if mode == ExperimentMode.FIVE_FOLD.value or mode == ExperimentMode.TEST.value:
         for i in range(5):
             test_fold = i + 1  # Folds are 1-indexed
             valid_fold = (i + 1) % 5 + 1  # Wraps around to fold 1 after fold 5
@@ -46,13 +44,13 @@ def generate_split_config(mode: str, split: Dict) -> List[Dict]:
                     train_p.extend(split['5-Fold'][f'Fold-{j}'])
             
             split_config.append({"train": train_p, "valid": valid_p, "test": test_p, "fold": f"Fold-{test_fold}"})
-    elif mode == "train":
+    elif mode == ExperimentMode.TRAIN.value:
         # split into train, valid, test
         split_config.append({"train": split['train'], "valid": split['valid'], "test": split['test'], "fold": "Fold-1"})
     
     else:
-        logging.error(f"Invalid mode. Choose from {AVAILABLE_MODES}.")
-        raise ValueError(f"Invalid mode. Choose from {AVAILABLE_MODES}.")
+        logging.error(f"Invalid mode. Choose from {[mode.value for mode in ExperimentMode]}.")
+        raise ValueError(f"Invalid mode. Choose from {[mode.value for mode in ExperimentMode]}.")
     return split_config
 
 
@@ -99,10 +97,10 @@ def unsupervised(config: Dict, data_path: str) -> None:
     # set seed
     set_seed(config["seed"])
     # only test on the whole dataset without split, unsupervised methods
-    if config["mode"] not in AVAILABLE_MODES:
-        logging.error(f"Invalid mode: {config['mode']}. Choose from {AVAILABLE_MODES}.")
-        raise ValueError(f"Invalid mode. Choose from {AVAILABLE_MODES}.")
-    if config["mode"] == "test" and config["method"]["type"]== "unsupervised":
+    if config["mode"] not in [mode.value for mode in ExperimentMode]:
+        logging.error(f"Invalid mode: {config['mode']}. Choose from {[mode.value for mode in ExperimentMode]}.")
+        raise ValueError(f"Invalid mode. Choose from {[mode.value for mode in ExperimentMode]}.")
+    if config["mode"] == ExperimentMode.TEST.value and config["method"]["type"]== "unsupervised":
         # load dataset
         channels = config["dataset"]["input_type"]
         tasks = config["dataset"]["label_type"]
@@ -131,9 +129,9 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
     # set seed
     set_seed(config["seed"])
     # training 
-    if mode not in AVAILABLE_MODES:
-        logging.error(f"Invalid mode: {mode}. Choose from {AVAILABLE_MODES}.")
-        raise ValueError(f"Invalid mode. Choose from {AVAILABLE_MODES}.")
+    if mode not in [mode.value for mode in ExperimentMode]:
+        logging.error(f"Invalid mode: {mode}. Choose from {[mode.value for mode in ExperimentMode]}.")
+        raise ValueError(f"Invalid mode. Choose from {[mode.value for mode in ExperimentMode]}.")
     # check if the key in split_config is in the subject list, save the cross into split_config
     # Correct the call to generate_split_config
     split = config.get("split", {})
@@ -161,7 +159,7 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
 
             checkpoint_path = None
             # for testing, use the checkpoint path
-            if mode == "test":
+            if mode == ExperimentMode.TEST.value:
                 checkpoint_dir = os.path.join("models", exp_name, task, current_fold)
                 best_checkpoint_path = os.path.join(checkpoint_dir, f"{exp_name}_{task}_{current_fold}_best.pt")
                 if os.path.exists(best_checkpoint_path):
@@ -181,7 +179,7 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
             
             train_task = "hr" if task in ["oura_hr", "samsung_hr"] else task
 
-            if "train" in split_config and (mode == "train" or mode == "5fold"):
+            if "train" in split_config and (mode == ExperimentMode.TRAIN.value or mode == ExperimentMode.FIVE_FOLD.value):
                 # prepare training dataset
                 train_data = pd.concat([all_data[p] for p in split_config["train"]])
                 train_dataset = load_dataset(
