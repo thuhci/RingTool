@@ -207,8 +207,9 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
                 valid_loader = DataLoader(valid_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
                 
                 # Train the model
-                checkpoint_path = trainer.fit(train_loader, valid_loader, task, current_fold)
+                checkpoint_path, config_path = trainer.fit(train_loader, valid_loader, task, current_fold)
                 logging.info(f"Model trained and saved to {checkpoint_path}.")
+                logging.info(f"Model config saved to {config_path}.")
         
             # test model 
             test_data = pd.concat([all_data[p] for p in split_config["test"]])

@@ -343,8 +343,9 @@ class SupervisedTrainer(BaseTrainer):
             logging.info(f"Configuration saved to {config_save_path}")
         else:
             logging.error(f"Failed to save configuration to {config_save_path}")
+            config_save_path = None
 
-        return best_checkpoint_path
+        return best_checkpoint_path, config_save_path
 
     def test(self, test_loader: DataLoader, checkpoint_path: str, task: str):
         # Load the best checkpoint if provided
