@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 import torch
 import torch.nn as nn
@@ -12,7 +12,7 @@ from nets.load_model import MODEL_CLASSES, SupportedSupervisedModels
 from unsupervised.hr.hr import get_hr
 from unsupervised.rr.rr import get_rr
 from unsupervised.spo2.spo2 import get_spo2
-from utils.utils import calculate_metrics, plot_and_save_metrics, save_metrics_to_csv
+from utils.utils import calculate_metrics, plot_and_save_metrics, save_config, save_metrics_to_csv
 
 
 class BaseTrainer:
@@ -161,7 +161,7 @@ class SupervisedTrainer(BaseTrainer):
         else:
             raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
 
-    def fit(self, train_loader, valid_loader, task=None, fold=None) -> str:
+    def fit(self, train_loader, valid_loader, task=None, fold=None) -> Tuple[str, str]:
         scaler = GradScaler(enabled=True)
         epochs = self.config.get("train", {}).get("epochs", 200)
         best_loss = float('inf')  # For metrics like loss where lower is better
@@ -193,10 +193,10 @@ class SupervisedTrainer(BaseTrainer):
             )
         exp_name = self.config.get("exp_name", "default_experiment")
         checkpoint_dir = os.path.join("models", exp_name, task, fold)
-        model_name = exp_name
         
         os.makedirs(checkpoint_dir, exist_ok=True)
-        best_checkpoint_path = os.path.join(checkpoint_dir, f"{model_name}_{task}_{fold}_best.pt")
+        best_checkpoint_path = os.path.join(checkpoint_dir, f"{exp_name}_{task}_{fold}_best.pt")
+        config_save_path = os.path.join(checkpoint_dir, f"{exp_name}_{task}_{fold}_config.json")
         if self.gradient_accum > 1:
             logging.info(f"Training with gradient accumulation: {self.gradient_accum} steps")
         
@@ -337,8 +337,13 @@ class SupervisedTrainer(BaseTrainer):
             if early_stop:
                 logging.info("Training stopped early due to early stopping criteria.")
                 break
-
         
+        # save the model config file alongside the best model pt file
+        if save_config(self.config, config_save_path):
+            logging.info(f"Configuration saved to {config_save_path}")
+        else:
+            logging.error(f"Failed to save configuration to {config_save_path}")
+
         return best_checkpoint_path
 
     def test(self, test_loader: DataLoader, checkpoint_path: str, task: str):

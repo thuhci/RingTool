@@ -1,6 +1,7 @@
+import json
 import logging
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -281,3 +282,30 @@ def plot_and_save_metrics(predictions, targets, config, task, img_path_folder=No
     
     logging.info(f"Saved visualization plots to {task_img_folder}")
     return task_img_folder
+
+
+def save_config(config: Dict, config_path: str) -> Optional[str]:
+    """
+    Save the configuration dictionary to a JSON file.
+    
+    Args:
+        config (dict): Configuration dictionary to save.
+        config_path (str): Path where the configuration file will be saved.
+    """
+    os.makedirs(os.path.dirname(config_path), exist_ok=True)
+    with open(config_path, 'w') as f:
+        json.dump(config, f)
+    
+    try:
+        with open(config_path, 'r') as f:
+            _ = json.load(f)
+        
+        return config_path
+    except FileNotFoundError:
+        return None
+    except json.JSONDecodeError as e:
+        logging.error(f"Error loading configuration from {config_path}: {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        return None
