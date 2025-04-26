@@ -1,0 +1,187 @@
+2025-04-26 09:47:09,610 - INFO - Starting experiment: peak-stationary.
+2025-04-26 09:47:09,610 - DEBUG - Config: {
+  "exp_name": "peak-stationary",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring1",
+    "input_type": [
+      "ir-filtered-rr"
+    ],
+    "label_type": [
+      "resp_rr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "sitting",
+      "spo2",
+      "talking",
+      "shaking_head",
+      "standing"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/peak/peak.csv",
+  "img_path": "img/peak",
+  "method": {
+    "name": "peak",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:47:09,610 - INFO - Logging to: logs/rtool-peak-stationary-0426-094709.log
+2025-04-26 09:47:09,610 - INFO - Running unsupervised method.
+2025-04-26 09:47:11,067 - INFO - Found 32 subjects in the data folder.
+2025-04-26 09:47:11,068 - INFO - Channels: ['ir-filtered-rr'], Task: ['resp_rr']
+2025-04-26 09:47:11,068 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'talking', 'shaking_head', 'standing'].
+2025-04-26 09:47:11,680 - INFO - Loaded 1675 samples for task resp_rr with channels ['ir-filtered-rr'] for dataset type train.
+2025-04-26 09:47:11,680 - INFO - Running unsupervised testing for resp_rr...
+2025-04-26 09:47:11,680 - INFO - Using algorithm: peak for task: resp_rr
+2025-04-26 09:47:11,727 - DEBUG - Task: resp_rr - MAE: 2.8468, RMSE: 3.9385, MAPE: 18.22%, Pearson: 0.4413
+2025-04-26 09:47:11,730 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak-stationary/resp_rr/peak-stationary.csv
+2025-04-26 09:47:13,198 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak-stationary/resp_rr
+2025-04-26 09:47:13,198 - INFO - Test results for task resp_rr: {'loss': 0, 'sample_len': 1675, 'mae': 2.8468078422907084, 'mae_with_std': '2.85±0.07', 'rmse': 3.938492699507999, 'rmse_with_std': '3.94±0.85', 'mape': 18.216054953753776, 'mape_with_std': '18.22±0.53', 'pearson': 0.44131309092883164, 'pearson_with_std': '0.44±0.02'}
+2025-04-26 09:47:13,244 - INFO - Experiment peak-stationary finished in 3.63 seconds.

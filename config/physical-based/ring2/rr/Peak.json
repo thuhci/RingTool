@@ -13,14 +13,14 @@
     }
     },
     "dataset":{
-        "ring_type": "ring1",
+        "ring_type": "ring2",
         "input_type": ["ir-filtered-rr"],
         "label_type": ["resp_rr"],
         "shuffle": true,
         "batch_size": 128,
         "quality_assessment": {
             "method": "elgendi",
-            "th": 0.8
+            "th": 0
         },
         "target_fs": 100,
         "window_duration": 30,

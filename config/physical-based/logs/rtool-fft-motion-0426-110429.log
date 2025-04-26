@@ -1,0 +1,206 @@
+2025-04-26 11:04:29,981 - INFO - Starting experiment: fft-motion.
+2025-04-26 11:04:29,982 - DEBUG - Config: {
+  "exp_name": "fft-motion",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring1",
+    "input_type": [
+      "ir-filtered"
+    ],
+    "label_type": [
+      "samsung_hr",
+      "oura_hr",
+      "hr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "deepsquat",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/fft/fft.csv",
+  "img_path": "img/fft",
+  "method": {
+    "name": "fft",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 11:04:29,982 - INFO - Logging to: logs/rtool-fft-motion-0426-110429.log
+2025-04-26 11:04:29,982 - INFO - Running unsupervised method.
+2025-04-26 11:04:31,492 - INFO - Found 32 subjects in the data folder.
+2025-04-26 11:04:31,493 - INFO - Channels: ['ir-filtered'], Task: ['samsung_hr', 'oura_hr', 'hr']
+2025-04-26 11:04:31,493 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 11:04:32,077 - INFO - calculate metrics for samsung_hr : {'sample_len': 35, 'mae': 38.50699996948242, 'mae_with_std': '38.51±3.86', 'rmse': 44.59284973144531, 'rmse_with_std': '44.59±19.41', 'mape': 56.50809860229492, 'mape_with_std': '56.51±9.52', 'pearson': 0.3770458698272705, 'pearson_with_std': '0.38±0.16'}
+2025-04-26 11:04:32,081 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft-motion/samsung_hr_com/fft-motion.csv
+2025-04-26 11:04:32,081 - INFO - Loaded 35 samples for task samsung_hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 11:04:32,082 - INFO - Running unsupervised testing for samsung_hr...
+2025-04-26 11:04:32,082 - INFO - Using algorithm: fft for task: samsung_hr
+2025-04-26 11:04:32,251 - DEBUG - Task: samsung_hr - MAE: 41.9543, RMSE: 46.8901, MAPE: 47.37%, Pearson: -0.1632
+2025-04-26 11:04:32,253 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft-motion/samsung_hr/fft-motion.csv
+2025-04-26 11:04:33,924 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/fft-motion/samsung_hr
+2025-04-26 11:04:33,924 - INFO - Test results for task samsung_hr: {'loss': 0, 'sample_len': 35, 'mae': 41.95433274623326, 'mae_with_std': '41.95±3.59', 'rmse': 46.89012730640607, 'rmse_with_std': '46.89±18.16', 'mape': 47.3686873574987, 'mape_with_std': '47.37±2.71', 'pearson': -0.16319708420617884, 'pearson_with_std': '-0.16±0.17'}
+2025-04-26 11:04:33,924 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 11:04:34,465 - INFO - calculate metrics for oura_hr : {'sample_len': 39, 'mae': 42.9505729675293, 'mae_with_std': '42.95±3.54', 'rmse': 48.16545104980469, 'rmse_with_std': '48.17±19.93', 'mape': 66.46430206298828, 'mape_with_std': '66.46±10.04', 'pearson': 0.17506925761699677, 'pearson_with_std': '0.18±0.16'}
+2025-04-26 11:04:34,467 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft-motion/oura_hr_com/fft-motion.csv
+2025-04-26 11:04:34,467 - INFO - Loaded 39 samples for task oura_hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 11:04:34,467 - INFO - Running unsupervised testing for oura_hr...
+2025-04-26 11:04:34,467 - INFO - Using algorithm: fft for task: oura_hr
+2025-04-26 11:04:34,671 - DEBUG - Task: oura_hr - MAE: 40.8146, RMSE: 46.3655, MAPE: 46.17%, Pearson: -0.0970
+2025-04-26 11:04:34,674 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft-motion/oura_hr/fft-motion.csv
+2025-04-26 11:04:36,223 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/fft-motion/oura_hr
+2025-04-26 11:04:36,223 - INFO - Test results for task oura_hr: {'loss': 0, 'sample_len': 39, 'mae': 40.81457201835437, 'mae_with_std': '40.81±3.57', 'rmse': 46.36552894079614, 'rmse_with_std': '46.37±17.85', 'mape': 46.1667631751542, 'mape_with_std': '46.17±2.73', 'pearson': -0.09698150586853543, 'pearson_with_std': '-0.10±0.16'}
+2025-04-26 11:04:36,223 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 11:04:36,733 - INFO - Loaded 191 samples for task hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 11:04:36,733 - INFO - Running unsupervised testing for hr...
+2025-04-26 11:04:36,733 - INFO - Using algorithm: fft for task: hr
+2025-04-26 11:04:37,414 - DEBUG - Task: hr - MAE: 39.2514, RMSE: 45.2535, MAPE: 43.65%, Pearson: 0.0899
+2025-04-26 11:04:37,417 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft-motion/hr/fft-motion.csv
+2025-04-26 11:04:39,178 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/fft-motion/hr
+2025-04-26 11:04:39,178 - INFO - Test results for task hr: {'loss': 0, 'sample_len': 191, 'mae': 39.251381396148844, 'mae_with_std': '39.25±1.63', 'rmse': 45.25352966960398, 'rmse_with_std': '45.25±11.65', 'mape': 43.649732200180395, 'mape_with_std': '43.65±1.37', 'pearson': 0.08986446903909924, 'pearson_with_std': '0.09±0.07'}
+2025-04-26 11:04:39,350 - INFO - Experiment fft-motion finished in 9.37 seconds.

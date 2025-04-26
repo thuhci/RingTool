@@ -154,7 +154,7 @@ class RingToolDataset(Dataset):
             label = self.raw_data.iloc[i][self.task]
             # if task is "oura" or "samsung", compare the hr and "oura" or "samsung", print the metrics, return the data contains hr and "oura" or "samsung"
             # Skip if label is None
-            if label is None:
+            if label is None or (self.task in ["oura_hr", "samsung_hr"] and self.raw_data.iloc[i]['hr'] is None):
                 continue
             if (self.task == "oura_hr" or self.task == "samsung_hr") and self.raw_data.iloc[i]['hr'] is not None:
                 # Compare the hr and "oura" or "samsung"

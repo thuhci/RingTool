@@ -38,14 +38,23 @@ def get_spo2(ppg_ir, ppg_red, fs=100, ring_type="ring1", method="ratio"):
     acDivDcRed = ac_red / dc_red
     acDivDcIr = ac_ir / dc_ir
     
-    # Calculate ratio
-    ratio = acDivDcRed / acDivDcIr
+    # Calculate ratio with zero/small value protection
+    epsilon_ratio = 1e-6
+    if abs(acDivDcIr) < epsilon_ratio:
+        ratio = 1.0  # Default value if denominator is too small
+    else:
+        ratio = acDivDcRed / acDivDcIr
     
-    # Calculate SpO2 using the formula: 
+    # Calculate SpO2 using the formula based on ring type
     if ring_type == "ring1":
         SPO2 = 99 - 6 * ratio
     elif ring_type == "ring2":
         SPO2 = 87 + 6 * ratio
+    else:
+        # Default formula if ring_type is not recognized
+        SPO2 = 99 - 6 * ratio
+        
+    # Note: fs and method parameters are reserved for future implementations
     
     # Print mean ratio for debugging
     # print(f"Ratio: {np.mean(ratio)}")

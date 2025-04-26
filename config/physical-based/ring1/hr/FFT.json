@@ -15,7 +15,7 @@
     "dataset":{
         "ring_type": "ring1",
         "input_type": ["ir-filtered"],
-        "label_type": ["hr"],
+        "label_type": ["samsung_hr","oura_hr","hr"],
         "shuffle": true,
         "batch_size": 128,
         "quality_assessment": {

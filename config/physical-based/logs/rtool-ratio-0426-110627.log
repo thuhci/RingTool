@@ -1,0 +1,184 @@
+2025-04-26 11:06:27,749 - INFO - Starting experiment: ratio.
+2025-04-26 11:06:27,749 - DEBUG - Config: {
+  "exp_name": "ratio",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring1",
+    "input_type": [
+      "ir-raw",
+      "red-raw"
+    ],
+    "label_type": [
+      "spo2"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "spo2"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/ratio/ratio.csv",
+  "img_path": "img/ratio",
+  "method": {
+    "name": "ratio",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 11:06:27,749 - INFO - Logging to: logs/rtool-ratio-0426-110627.log
+2025-04-26 11:06:27,749 - INFO - Running unsupervised method.
+2025-04-26 11:06:29,190 - INFO - Found 32 subjects in the data folder.
+2025-04-26 11:06:29,190 - INFO - Channels: ['ir-raw', 'red-raw'], Task: ['spo2']
+2025-04-26 11:06:29,191 - INFO - Scenario mode on. Loading train dataset from scenarios: ['spo2'].
+2025-04-26 11:06:29,632 - INFO - Loaded 456 samples for task spo2 with channels ['ir-raw', 'red-raw'] for dataset type train.
+2025-04-26 11:06:29,632 - INFO - Running unsupervised testing for spo2...
+2025-04-26 11:06:29,632 - INFO - Using algorithm: ratio for task: spo2
+2025-04-26 11:06:29,663 - DEBUG - Task: spo2 - MAE: 3.5737, RMSE: 4.6506, MAPE: 3.86%, Pearson: 0.3028
+2025-04-26 11:06:29,665 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/ratio/spo2/ratio.csv
+2025-04-26 11:06:30,919 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/ratio/spo2
+2025-04-26 11:06:30,920 - INFO - Test results for task spo2: {'loss': 0, 'sample_len': 456, 'mae': 3.573665142059326, 'mae_with_std': '3.57±0.14', 'rmse': 4.650601387023926, 'rmse_with_std': '4.65±1.34', 'mape': 3.8570568561553955, 'mape_with_std': '3.86±0.16', 'pearson': 0.302751362323761, 'pearson_with_std': '0.30±0.04'}
+2025-04-26 11:06:30,956 - INFO - Experiment ratio finished in 3.21 seconds.

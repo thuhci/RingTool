@@ -20,7 +20,7 @@
         "batch_size": 128,
         "quality_assessment": {
             "method": "elgendi",
-            "th": 0.8
+            "th": 0
         },
         "target_fs": 100,
         "window_duration": 30,

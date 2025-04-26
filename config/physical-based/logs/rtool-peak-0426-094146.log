@@ -1,0 +1,209 @@
+2025-04-26 09:41:46,113 - INFO - Starting experiment: peak.
+2025-04-26 09:41:46,113 - DEBUG - Config: {
+  "exp_name": "peak",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring2",
+    "input_type": [
+      "ir-filtered-rr"
+    ],
+    "label_type": [
+      "resp_rr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "sitting",
+      "spo2",
+      "deepsquat",
+      "talking",
+      "shaking_head",
+      "standing",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/peak/peak.csv",
+  "img_path": "img/peak",
+  "method": {
+    "name": "peak",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:41:46,113 - INFO - Logging to: logs/rtool-peak-0426-094146.log
+2025-04-26 09:41:46,113 - INFO - Running unsupervised method.
+2025-04-26 09:41:47,606 - INFO - Found 33 subjects in the data folder.
+2025-04-26 09:41:47,607 - INFO - Channels: ['ir-filtered-rr'], Task: ['resp_rr']
+2025-04-26 09:41:47,607 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding'].
+2025-04-26 09:41:48,267 - INFO - Loaded 1704 samples for task resp_rr with channels ['ir-filtered-rr'] for dataset type train.
+2025-04-26 09:41:48,267 - INFO - Running unsupervised testing for resp_rr...
+2025-04-26 09:41:48,267 - INFO - Using algorithm: peak for task: resp_rr
+2025-04-26 09:41:48,315 - DEBUG - Task: resp_rr - MAE: nan, RMSE: nan, MAPE: nan%, Pearson: nan
+2025-04-26 09:41:48,317 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/resp_rr/peak.csv
+2025-04-26 09:41:48,329 - ERROR - Error running experiment with config ./config/Resnet.json: array must not contain infs or NaNs
+Traceback (most recent call last):
+  File "/home/disk2/disk/3/tjk/RingTool/main.py", line 287, in do_run_experiment
+    unsupervised(config, data_path)
+  File "/home/disk2/disk/3/tjk/RingTool/main.py", line 118, in unsupervised
+    test_results = tester.test(all_loader, None, task)
+  File "/home/disk2/disk/3/tjk/RingTool/trainer/load_trainer.py", line 125, in test
+    plot_and_save_metrics(predictions=all_predictions, targets=all_targets, config=self.config, task=task)
+  File "/home/disk2/disk/3/tjk/RingTool/utils/utils.py", line 199, in plot_and_save_metrics
+    z = gaussian_kde(xy)(xy)
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/stats/_kde.py", line 226, in __init__
+    self.set_bandwidth(bw_method=bw_method)
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/stats/_kde.py", line 574, in set_bandwidth
+    self._compute_covariance()
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/stats/_kde.py", line 586, in _compute_covariance
+    self._data_cho_cov = linalg.cholesky(self._data_covariance,
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/linalg/_decomp_cholesky.py", line 88, in cholesky
+    c, lower = _cholesky(a, lower=lower, overwrite_a=overwrite_a, clean=True,
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/linalg/_decomp_cholesky.py", line 17, in _cholesky
+    a1 = asarray_chkfinite(a) if check_finite else asarray(a)
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/numpy/lib/function_base.py", line 630, in asarray_chkfinite
+    raise ValueError(
+ValueError: array must not contain infs or NaNs
