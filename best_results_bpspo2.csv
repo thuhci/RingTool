@@ -17,9 +17,9 @@ resnetbp,5fold,ring1,all-folds,BP_sys,"['ir-filtered', 'red-filtered']","['sitti
 resnetbp,5fold,ring2,all-folds,BP_sys,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",resnet,200,0.001,mse,128,97,17.47±1.15,20.78±6.90,16.75±1.12,-0.06±0.10
 resnetspo2,5fold,ring1,all-folds,spo2,"['ir-filtered', 'red-filtered']",['spo2'],resnet,200,0.001,mse,128,456,3.22±0.14,4.46±1.35,3.57±0.17,0.01±0.05
 resnetspo2,5fold,ring2,all-folds,spo2,"['ir-filtered', 'red-filtered']",['spo2'],resnet,200,0.001,mse,128,262,3.62±0.22,5.02±1.61,4.03±0.25,0.11±0.06
-transformerbp,5fold,ring1,all-folds,BP_dia,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mae,16,136,7.13±0.49,9.10±3.25,11.10±0.83,0.11±0.09
-transformerbp,5fold,ring2,all-folds,BP_dia,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mae,16,97,8.66±0.66,10.82±4.04,13.33±1.05,-0.01±0.10
-transformerbp,5fold,ring1,all-folds,BP_sys,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mae,16,136,14.17±0.88,17.47±5.85,13.27±0.78,-0.12±0.09
-transformerbp,5fold,ring2,all-folds,BP_sys,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mae,16,97,15.38±1.01,18.26±6.49,14.56±0.93,-0.04±0.10
-transformerspo2,5fold,ring1,all-folds,spo2,"['ir-filtered', 'red-filtered']",['spo2'],transformer,200,0.001,mae,16,456,3.59±0.17,5.12±1.50,4.01±0.20,0.03±0.05
-transformerspo2,5fold,ring2,all-folds,spo2,"['ir-filtered', 'red-filtered']",['spo2'],transformer,200,0.001,mae,16,262,3.89±0.23,5.39±1.71,4.34±0.27,0.04±0.06
+transformerbp,5fold,ring1,all-folds,BP_dia,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mse,16,136,7.47±0.52,9.59±3.49,11.56±0.86,-0.16±0.09
+transformerbp,5fold,ring2,all-folds,BP_dia,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mse,16,97,8.20±0.68,10.56±4.15,12.78±1.12,-0.17±0.10
+transformerbp,5fold,ring1,all-folds,BP_sys,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mse,16,136,13.48±0.82,16.49±5.36,12.76±0.76,-0.09±0.09
+transformerbp,5fold,ring2,all-folds,BP_sys,"['ir-filtered', 'red-filtered']","['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mse,16,97,15.20±0.95,17.80±5.96,14.57±0.92,-0.09±0.10
+transformerspo2,5fold,ring1,all-folds,spo2,"['ir-filtered', 'red-filtered']",['spo2'],transformer,200,0.001,mse,16,456,3.23±0.16,4.65±1.42,3.60±0.19,-0.07±0.05
+transformerspo2,5fold,ring2,all-folds,spo2,"['ir-filtered', 'red-filtered']",['spo2'],transformer,200,0.001,mse,16,262,3.55±0.21,4.96±1.62,3.96±0.25,0.04±0.06

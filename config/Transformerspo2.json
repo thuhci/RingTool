@@ -61,7 +61,7 @@
         "epochs": 200,
         "gradient_accum": 1,
         "lr": 1e-3,
-        "criterion": "mae",
+        "criterion": "mse",
         "optimizer": "adam",
         "early_stopping": {
             "monitor": "val_loss",

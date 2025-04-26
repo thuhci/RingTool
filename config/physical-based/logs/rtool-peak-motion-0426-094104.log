@@ -1,0 +1,226 @@
+2025-04-26 09:41:04,169 - INFO - Starting experiment: peak-motion.
+2025-04-26 09:41:04,169 - DEBUG - Config: {
+  "exp_name": "peak-motion",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring2",
+    "input_type": [
+      "ir-filtered"
+    ],
+    "label_type": [
+      "samsung_hr",
+      "oura_hr",
+      "hr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "deepsquat",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/peak/peak.csv",
+  "img_path": "img/peak",
+  "method": {
+    "name": "peak",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:41:04,169 - INFO - Logging to: logs/rtool-peak-motion-0426-094104.log
+2025-04-26 09:41:04,169 - INFO - Running unsupervised method.
+2025-04-26 09:41:05,754 - INFO - Found 33 subjects in the data folder.
+2025-04-26 09:41:05,755 - INFO - Channels: ['ir-filtered'], Task: ['samsung_hr', 'oura_hr', 'hr']
+2025-04-26 09:41:05,755 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 09:41:06,142 - INFO - calculate metrics for samsung_hr : {'sample_len': 25, 'mae': 36.027679443359375, 'mae_with_std': '36.03±4.66', 'rmse': 42.63873291015625, 'rmse_with_std': '42.64±21.90', 'mape': 49.16824722290039, 'mape_with_std': '49.17±11.01', 'pearson': 0.4102981984615326, 'pearson_with_std': '0.41±0.19'}
+2025-04-26 09:41:06,144 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak-motion/samsung_hr_com/peak-motion.csv
+2025-04-26 09:41:06,144 - INFO - Loaded 30 samples for task samsung_hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 09:41:06,144 - INFO - Running unsupervised testing for samsung_hr...
+2025-04-26 09:41:06,144 - INFO - Using algorithm: peak for task: samsung_hr
+2025-04-26 09:41:06,147 - DEBUG - Task: samsung_hr - MAE: 28.7989, RMSE: 33.9934, MAPE: 38.30%, Pearson: -0.2214
+2025-04-26 09:41:06,148 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak-motion/samsung_hr/peak-motion.csv
+2025-04-26 09:41:07,192 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak-motion/samsung_hr
+2025-04-26 09:41:07,193 - INFO - Test results for task samsung_hr: {'loss': 0, 'sample_len': 30, 'mae': 28.7989471583082, 'mae_with_std': '28.80±3.35', 'rmse': 33.99338051573706, 'rmse_with_std': '33.99±15.48', 'mape': 38.302433925990236, 'mape_with_std': '38.30±7.24', 'pearson': -0.2214063669236547, 'pearson_with_std': '-0.22±0.18'}
+2025-04-26 09:41:07,193 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 09:41:07,539 - INFO - calculate metrics for oura_hr : {'sample_len': 27, 'mae': 44.797237396240234, 'mae_with_std': '44.80±4.20', 'rmse': 49.64395523071289, 'rmse_with_std': '49.64±23.00', 'mape': 62.355411529541016, 'mape_with_std': '62.36±11.85', 'pearson': 0.0007212879718281329, 'pearson_with_std': '0.00±0.20'}
+2025-04-26 09:41:07,541 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak-motion/oura_hr_com/peak-motion.csv
+2025-04-26 09:41:07,541 - INFO - Loaded 32 samples for task oura_hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 09:41:07,541 - INFO - Running unsupervised testing for oura_hr...
+2025-04-26 09:41:07,541 - INFO - Using algorithm: peak for task: oura_hr
+2025-04-26 09:41:07,543 - DEBUG - Task: oura_hr - MAE: 27.4852, RMSE: 33.3176, MAPE: 35.04%, Pearson: -0.1936
+2025-04-26 09:41:07,544 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak-motion/oura_hr/peak-motion.csv
+2025-04-26 09:41:08,573 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak-motion/oura_hr
+2025-04-26 09:41:08,573 - INFO - Test results for task oura_hr: {'loss': 0, 'sample_len': 32, 'mae': 27.485153360886535, 'mae_with_std': '27.49±3.38', 'rmse': 33.31758316839657, 'rmse_with_std': '33.32±15.57', 'mape': 35.04278024536087, 'mape_with_std': '35.04±6.81', 'pearson': -0.1935798025852406, 'pearson_with_std': '-0.19±0.18'}
+2025-04-26 09:41:08,573 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 09:41:08,922 - INFO - Loaded 181 samples for task hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 09:41:08,922 - INFO - Running unsupervised testing for hr...
+2025-04-26 09:41:08,922 - INFO - Using algorithm: peak for task: hr
+2025-04-26 09:41:08,929 - DEBUG - Task: hr - MAE: nan, RMSE: nan, MAPE: nan%, Pearson: nan
+2025-04-26 09:41:08,931 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak-motion/hr/peak-motion.csv
+2025-04-26 09:41:08,938 - ERROR - Error running experiment with config ./config/Resnet.json: array must not contain infs or NaNs
+Traceback (most recent call last):
+  File "/home/disk2/disk/3/tjk/RingTool/main.py", line 287, in do_run_experiment
+    unsupervised(config, data_path)
+  File "/home/disk2/disk/3/tjk/RingTool/main.py", line 118, in unsupervised
+    test_results = tester.test(all_loader, None, task)
+  File "/home/disk2/disk/3/tjk/RingTool/trainer/load_trainer.py", line 125, in test
+    plot_and_save_metrics(predictions=all_predictions, targets=all_targets, config=self.config, task=task)
+  File "/home/disk2/disk/3/tjk/RingTool/utils/utils.py", line 199, in plot_and_save_metrics
+    z = gaussian_kde(xy)(xy)
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/stats/_kde.py", line 226, in __init__
+    self.set_bandwidth(bw_method=bw_method)
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/stats/_kde.py", line 574, in set_bandwidth
+    self._compute_covariance()
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/stats/_kde.py", line 586, in _compute_covariance
+    self._data_cho_cov = linalg.cholesky(self._data_covariance,
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/linalg/_decomp_cholesky.py", line 88, in cholesky
+    c, lower = _cholesky(a, lower=lower, overwrite_a=overwrite_a, clean=True,
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/scipy/linalg/_decomp_cholesky.py", line 17, in _cholesky
+    a1 = asarray_chkfinite(a) if check_finite else asarray(a)
+  File "/home/user/HKD/miniconda3/envs/tjk/lib/python3.9/site-packages/numpy/lib/function_base.py", line 630, in asarray_chkfinite
+    raise ValueError(
+ValueError: array must not contain infs or NaNs

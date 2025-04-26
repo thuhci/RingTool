@@ -1,0 +1,184 @@
+2025-04-26 09:46:35,468 - INFO - Starting experiment: fft-motion.
+2025-04-26 09:46:35,468 - DEBUG - Config: {
+  "exp_name": "fft-motion",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring1",
+    "input_type": [
+      "ir-filtered-rr"
+    ],
+    "label_type": [
+      "resp_rr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0.8
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "deepsquat",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/fft/fft.csv",
+  "img_path": "img/fft",
+  "method": {
+    "name": "fft",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:46:35,469 - INFO - Logging to: logs/rtool-fft-motion-0426-094635.log
+2025-04-26 09:46:35,469 - INFO - Running unsupervised method.
+2025-04-26 09:46:36,911 - INFO - Found 32 subjects in the data folder.
+2025-04-26 09:46:36,912 - INFO - Channels: ['ir-filtered-rr'], Task: ['resp_rr']
+2025-04-26 09:46:36,912 - INFO - Scenario mode on. Loading train dataset from scenarios: ['deepsquat', 'striding'].
+2025-04-26 09:46:37,204 - INFO - Loaded 30 samples for task resp_rr with channels ['ir-filtered-rr'] for dataset type train.
+2025-04-26 09:46:37,204 - INFO - Running unsupervised testing for resp_rr...
+2025-04-26 09:46:37,204 - INFO - Using algorithm: fft for task: resp_rr
+2025-04-26 09:46:37,355 - DEBUG - Task: resp_rr - MAE: 6.5402, RMSE: 7.6397, MAPE: 33.00%, Pearson: 0.0399
+2025-04-26 09:46:37,357 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft-motion/resp_rr/fft-motion.csv
+2025-04-26 09:46:38,476 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/fft-motion/resp_rr
+2025-04-26 09:46:38,476 - INFO - Test results for task resp_rr: {'loss': 0, 'sample_len': 30, 'mae': 6.5402038911183675, 'mae_with_std': '6.54±0.73', 'rmse': 7.639656936495555, 'rmse_with_std': '7.64±3.41', 'mape': 33.000850700824124, 'mape_with_std': '33.00±3.21', 'pearson': 0.03994507728689061, 'pearson_with_std': '0.04±0.19'}
+2025-04-26 09:46:38,521 - INFO - Experiment fft-motion finished in 3.05 seconds.

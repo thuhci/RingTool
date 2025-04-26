@@ -1,0 +1,189 @@
+2025-04-26 09:39:43,239 - INFO - Starting experiment: peak.
+2025-04-26 09:39:43,240 - DEBUG - Config: {
+  "exp_name": "peak",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring1",
+    "input_type": [
+      "ir-filtered-rr"
+    ],
+    "label_type": [
+      "resp_rr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "sitting",
+      "spo2",
+      "deepsquat",
+      "talking",
+      "shaking_head",
+      "standing",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/peak/peak.csv",
+  "img_path": "img/peak",
+  "method": {
+    "name": "peak",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:39:43,240 - INFO - Logging to: logs/rtool-peak-0426-093943.log
+2025-04-26 09:39:43,240 - INFO - Running unsupervised method.
+2025-04-26 09:39:44,741 - INFO - Found 32 subjects in the data folder.
+2025-04-26 09:39:44,742 - INFO - Channels: ['ir-filtered-rr'], Task: ['resp_rr']
+2025-04-26 09:39:44,742 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding'].
+2025-04-26 09:39:45,408 - INFO - Loaded 1870 samples for task resp_rr with channels ['ir-filtered-rr'] for dataset type train.
+2025-04-26 09:39:45,408 - INFO - Running unsupervised testing for resp_rr...
+2025-04-26 09:39:45,408 - INFO - Using algorithm: peak for task: resp_rr
+2025-04-26 09:39:45,463 - DEBUG - Task: resp_rr - MAE: 2.9823, RMSE: 4.1164, MAPE: 18.39%, Pearson: 0.4964
+2025-04-26 09:39:45,465 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/resp_rr/peak.csv
+2025-04-26 09:39:46,976 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak/resp_rr
+2025-04-26 09:39:46,976 - INFO - Test results for task resp_rr: {'loss': 0, 'sample_len': 1870, 'mae': 2.9822624992954165, 'mae_with_std': '2.98±0.07', 'rmse': 4.116405719684552, 'rmse_with_std': '4.12±0.85', 'mape': 18.389278498105522, 'mape_with_std': '18.39±0.50', 'pearson': 0.49637191123756963, 'pearson_with_std': '0.50±0.02'}
+2025-04-26 09:39:47,046 - INFO - Experiment peak finished in 3.81 seconds.

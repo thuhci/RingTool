@@ -1,0 +1,211 @@
+2025-04-26 09:38:31,884 - INFO - Starting experiment: peak.
+2025-04-26 09:38:31,885 - DEBUG - Config: {
+  "exp_name": "peak",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring1",
+    "input_type": [
+      "ir-filtered"
+    ],
+    "label_type": [
+      "samsung_hr",
+      "oura_hr",
+      "hr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "sitting",
+      "spo2",
+      "deepsquat",
+      "talking",
+      "shaking_head",
+      "standing",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/peak/peak.csv",
+  "img_path": "img/peak",
+  "method": {
+    "name": "peak",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:38:31,885 - INFO - Logging to: logs/rtool-peak-0426-093831.log
+2025-04-26 09:38:31,885 - INFO - Running unsupervised method.
+2025-04-26 09:38:33,360 - INFO - Found 32 subjects in the data folder.
+2025-04-26 09:38:33,360 - INFO - Channels: ['ir-filtered'], Task: ['samsung_hr', 'oura_hr', 'hr']
+2025-04-26 09:38:33,361 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding'].
+2025-04-26 09:38:34,057 - INFO - calculate metrics for samsung_hr : {'sample_len': 186, 'mae': 9.903587341308594, 'mae_with_std': '9.90±1.25', 'rmse': 19.719900131225586, 'rmse_with_std': '19.72±9.49', 'mape': 13.935250282287598, 'mape_with_std': '13.94±2.34', 'pearson': 0.5577331781387329, 'pearson_with_std': '0.56±0.06'}
+2025-04-26 09:38:34,060 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/samsung_hr_com/peak.csv
+2025-04-26 09:38:34,060 - INFO - Loaded 192 samples for task samsung_hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 09:38:34,060 - INFO - Running unsupervised testing for samsung_hr...
+2025-04-26 09:38:34,060 - INFO - Using algorithm: peak for task: samsung_hr
+2025-04-26 09:38:34,068 - DEBUG - Task: samsung_hr - MAE: 19.5388, RMSE: 27.6806, MAPE: 26.44%, Pearson: 0.2375
+2025-04-26 09:38:34,070 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/samsung_hr/peak.csv
+2025-04-26 09:38:35,274 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak/samsung_hr
+2025-04-26 09:38:35,274 - INFO - Test results for task samsung_hr: {'loss': 0, 'sample_len': 192, 'mae': 19.538797870691457, 'mae_with_std': '19.54±1.42', 'rmse': 27.68055896425854, 'rmse_with_std': '27.68±9.31', 'mape': 26.435459124426448, 'mape_with_std': '26.44±2.39', 'pearson': 0.2374979710982689, 'pearson_with_std': '0.24±0.07'}
+2025-04-26 09:38:35,274 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding'].
+2025-04-26 09:38:35,868 - INFO - calculate metrics for oura_hr : {'sample_len': 237, 'mae': 10.092679977416992, 'mae_with_std': '10.09±1.13', 'rmse': 20.04730224609375, 'rmse_with_std': '20.05±9.23', 'mape': 14.66856575012207, 'mape_with_std': '14.67±2.23', 'pearson': 0.4672403633594513, 'pearson_with_std': '0.47±0.06'}
+2025-04-26 09:38:35,870 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/oura_hr_com/peak.csv
+2025-04-26 09:38:35,870 - INFO - Loaded 243 samples for task oura_hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 09:38:35,870 - INFO - Running unsupervised testing for oura_hr...
+2025-04-26 09:38:35,870 - INFO - Using algorithm: peak for task: oura_hr
+2025-04-26 09:38:35,878 - DEBUG - Task: oura_hr - MAE: 20.2461, RMSE: 28.6455, MAPE: 27.77%, Pearson: 0.2204
+2025-04-26 09:38:35,879 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/oura_hr/peak.csv
+2025-04-26 09:38:37,095 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak/oura_hr
+2025-04-26 09:38:37,095 - INFO - Test results for task oura_hr: {'loss': 0, 'sample_len': 243, 'mae': 20.246098938148574, 'mae_with_std': '20.25±1.30', 'rmse': 28.645475557230842, 'rmse_with_std': '28.65±8.71', 'mape': 27.7738959377749, 'mape_with_std': '27.77±2.20', 'pearson': 0.2204326240721873, 'pearson_with_std': '0.22±0.06'}
+2025-04-26 09:38:37,095 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding'].
+2025-04-26 09:38:37,706 - INFO - Loaded 1929 samples for task hr with channels ['ir-filtered'] for dataset type train.
+2025-04-26 09:38:37,707 - INFO - Running unsupervised testing for hr...
+2025-04-26 09:38:37,707 - INFO - Using algorithm: peak for task: hr
+2025-04-26 09:38:37,763 - DEBUG - Task: hr - MAE: 18.4737, RMSE: 26.7215, MAPE: 24.72%, Pearson: 0.3248
+2025-04-26 09:38:37,765 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/peak/hr/peak.csv
+2025-04-26 09:38:39,366 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/peak/hr
+2025-04-26 09:38:39,367 - INFO - Test results for task hr: {'loss': 0, 'sample_len': 1929, 'mae': 18.473662391647615, 'mae_with_std': '18.47±0.44', 'rmse': 26.721493463522993, 'rmse_with_std': '26.72±5.13', 'mape': 24.716551398838906, 'mape_with_std': '24.72±0.67', 'pearson': 0.32483750572635506, 'pearson_with_std': '0.32±0.02'}
+2025-04-26 09:38:39,468 - INFO - Experiment peak finished in 7.58 seconds.

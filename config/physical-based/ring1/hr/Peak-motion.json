@@ -1,0 +1,76 @@
+{
+    "exp_name": "peak-motion",
+    "mode": "test",
+    "split":{
+        "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
+        "valid": ["00013", "00018", "00002", "00032", "00028", "00021", "00000"], 
+        "test": ["00023", "00004", "00040", "00015", "00017", "00001", "00007"], 
+        "5-Fold": {"Fold-1": ["00023", "00004", "00040", "00015", "00017", "00001", "00007"], 
+            "Fold-2": ["00013", "00018", "00002", "00032", "00028", "00021", "00000"], 
+            "Fold-3": ["00009", "00012", "00005", "00020", "00031", "00022", "00029"],
+            "Fold-4": ["00016","00025", "00024", "00014", "00010", "00011", "00027"], 
+            "Fold-5": ["00008", "00019", "00030", "00003", "00026" , "00006", "00033"]
+    }
+    },
+    "dataset":{
+        "ring_type": "ring1",
+        "input_type": ["ir-filtered"],
+        "label_type": ["samsung_hr","oura_hr","hr"],
+        "shuffle": true,
+        "batch_size": 128,
+        "quality_assessment": {
+            "method": "elgendi",
+            "th": 0
+        },
+        "target_fs": 100,
+        "window_duration": 30,
+        "experiment": ["Health", "Daily","Sport"],
+        "task": [ "deepsquat", "striding"]
+    },
+    "seed": 42,
+    "csv_path": "csv/peak/peak.csv",
+    "img_path": "img/peak",
+    "method": {
+        "name": "peak",
+        "type": "unsupervised", 
+        "model_path": null,
+        "params":{
+            "in_channels": 1,  
+            "base_filters": 32,
+            "kernel_size": 5,
+            "stride": 2,
+            "groups": 1,
+            "n_block": 8,
+            "n_classes": 180,  
+            "downsample_gap": 2,
+            "increasefilter_gap": 4,
+            "backbone": false
+        }
+    },
+    "train":{
+        "device": "1",
+        "epochs": 200,
+        "lr": 1e-3,
+        "criterion": "mse",
+        "optimizer": "adam",
+        "early_stopping": {
+            "monitor": "val_loss",
+            "patience": 30,
+            "mode": "min"
+        },
+        "model_checkpoint": {
+            "monitor": "val_loss",
+            "mode": "min",
+            "save_best_only": true
+        }
+    },
+    "test":{
+        "device": "1",
+        "batch_size": 128,
+        "metrics": ["mae", "rmse", "mape", "pearson"],
+        "model_path": null,
+        "model_name": null
+    },
+    "pretrain_model": "TODO"
+
+}

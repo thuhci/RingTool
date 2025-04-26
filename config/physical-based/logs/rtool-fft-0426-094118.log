@@ -1,0 +1,189 @@
+2025-04-26 09:41:18,213 - INFO - Starting experiment: fft.
+2025-04-26 09:41:18,213 - DEBUG - Config: {
+  "exp_name": "fft",
+  "mode": "test",
+  "split": {
+    "train": [
+      "00009",
+      "00012",
+      "00005",
+      "00020",
+      "00031",
+      "00022",
+      "00029",
+      "00016",
+      "00026",
+      "00024",
+      "00014",
+      "00010",
+      "00011",
+      "00027",
+      "00008",
+      "00019",
+      "00030",
+      "00003",
+      "00025",
+      "00006",
+      "00033"
+    ],
+    "valid": [
+      "00013",
+      "00018",
+      "00002",
+      "00032",
+      "00028",
+      "00021",
+      "00000"
+    ],
+    "test": [
+      "00023",
+      "00004",
+      "00040",
+      "00015",
+      "00017",
+      "00001",
+      "00007"
+    ],
+    "5-Fold": {
+      "Fold-1": [
+        "00023",
+        "00004",
+        "00040",
+        "00015",
+        "00017",
+        "00001",
+        "00007"
+      ],
+      "Fold-2": [
+        "00013",
+        "00018",
+        "00002",
+        "00032",
+        "00028",
+        "00021",
+        "00000"
+      ],
+      "Fold-3": [
+        "00009",
+        "00012",
+        "00005",
+        "00020",
+        "00031",
+        "00022",
+        "00029"
+      ],
+      "Fold-4": [
+        "00016",
+        "00025",
+        "00024",
+        "00014",
+        "00010",
+        "00011",
+        "00027"
+      ],
+      "Fold-5": [
+        "00008",
+        "00019",
+        "00030",
+        "00003",
+        "00026",
+        "00006",
+        "00033"
+      ]
+    }
+  },
+  "dataset": {
+    "ring_type": "ring2",
+    "input_type": [
+      "ir-filtered-rr"
+    ],
+    "label_type": [
+      "resp_rr"
+    ],
+    "shuffle": true,
+    "batch_size": 128,
+    "quality_assessment": {
+      "method": "elgendi",
+      "th": 0.8
+    },
+    "target_fs": 100,
+    "window_duration": 30,
+    "experiment": [
+      "Health",
+      "Daily",
+      "Sport"
+    ],
+    "task": [
+      "sitting",
+      "spo2",
+      "deepsquat",
+      "talking",
+      "shaking_head",
+      "standing",
+      "striding"
+    ]
+  },
+  "seed": 42,
+  "csv_path": "csv/fft/fft.csv",
+  "img_path": "img/fft",
+  "method": {
+    "name": "fft",
+    "type": "unsupervised",
+    "model_path": null,
+    "params": {
+      "in_channels": 1,
+      "base_filters": 32,
+      "kernel_size": 5,
+      "stride": 2,
+      "groups": 1,
+      "n_block": 8,
+      "n_classes": 180,
+      "downsample_gap": 2,
+      "increasefilter_gap": 4,
+      "backbone": false
+    }
+  },
+  "train": {
+    "device": "1",
+    "epochs": 200,
+    "lr": 0.001,
+    "criterion": "mse",
+    "optimizer": "adam",
+    "early_stopping": {
+      "monitor": "val_loss",
+      "patience": 30,
+      "mode": "min"
+    },
+    "model_checkpoint": {
+      "monitor": "val_loss",
+      "mode": "min",
+      "save_best_only": true
+    }
+  },
+  "test": {
+    "device": "1",
+    "batch_size": 128,
+    "metrics": [
+      "mae",
+      "rmse",
+      "mape",
+      "pearson"
+    ],
+    "model_path": null,
+    "model_name": null
+  },
+  "pretrain_model": "TODO"
+}
+2025-04-26 09:41:18,213 - INFO - Logging to: logs/rtool-fft-0426-094118.log
+2025-04-26 09:41:18,213 - INFO - Running unsupervised method.
+2025-04-26 09:41:19,708 - INFO - Found 33 subjects in the data folder.
+2025-04-26 09:41:19,709 - INFO - Channels: ['ir-filtered-rr'], Task: ['resp_rr']
+2025-04-26 09:41:19,709 - INFO - Scenario mode on. Loading train dataset from scenarios: ['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding'].
+2025-04-26 09:41:20,135 - INFO - Loaded 940 samples for task resp_rr with channels ['ir-filtered-rr'] for dataset type train.
+2025-04-26 09:41:20,135 - INFO - Running unsupervised testing for resp_rr...
+2025-04-26 09:41:20,135 - INFO - Using algorithm: fft for task: resp_rr
+2025-04-26 09:41:23,891 - DEBUG - Task: resp_rr - MAE: 4.9557, RMSE: 6.0092, MAPE: 27.08%, Pearson: 0.2091
+2025-04-26 09:41:23,894 - INFO - Saved results to /home/disk2/disk/3/tjk/RingTool/csv/fft/resp_rr/fft.csv
+2025-04-26 09:41:25,209 - INFO - Saved visualization plots to /home/disk2/disk/3/tjk/RingTool/img/fft/resp_rr
+2025-04-26 09:41:25,209 - INFO - Test results for task resp_rr: {'loss': 0, 'sample_len': 940, 'mae': 4.955692190981925, 'mae_with_std': '4.96±0.11', 'rmse': 6.009163904089072, 'rmse_with_std': '6.01±1.24', 'mape': 27.079714083268318, 'mape_with_std': '27.08±0.56', 'pearson': 0.20907020909417223, 'pearson_with_std': '0.21±0.03'}
+2025-04-26 09:41:25,307 - INFO - Experiment fft finished in 7.09 seconds.

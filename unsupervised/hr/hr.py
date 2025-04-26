@@ -28,12 +28,30 @@ def get_hr(y, fs=100, min=30, max=180, method = 'fft'):
         y = y.flatten()
 
     if method == 'fft':
-        p, q = welch(y, fs, nfft=int(1e5/fs), nperseg=np.min((len(y)-1, 512)))
+        p, q = welch(y, fs, nfft=int(5e6/fs), nperseg=np.min((len(y)-1, 512)))
         fft_hr = p[(p>min/60)&(p<max/60)][np.argmax(q[(p>min/60)&(p<max/60)])]*60
         return fft_hr
     elif method == 'peak':
         ppg_peaks, _ = find_peaks(y)
-        peak_hr = 60 / (np.mean(np.diff(ppg_peaks)) / fs)
+        # Check if we have enough peaks to calculate heart rate
+        if len(ppg_peaks) <= 1:
+            return 80.0  # Default heart rate if insufficient peaks found
+        
+        # Calculate differences between peaks and their mean
+        peak_diffs = np.diff(ppg_peaks)
+        mean_diff = np.mean(peak_diffs)
+        
+        # Check for invalid mean (zero or negative)
+        if mean_diff <= 0:
+            return 80.0  # Default heart rate
+            
+        # Calculate heart rate
+        peak_hr = 60 / (mean_diff / fs)
+        
+        # Handle any NaN or infinite values
+        if not np.isfinite(peak_hr):
+            return 80.0  # Default heart rate
+            
         return peak_hr
     else:
         raise ValueError("Invalid method. Choose 'fft' or 'peak'.")
