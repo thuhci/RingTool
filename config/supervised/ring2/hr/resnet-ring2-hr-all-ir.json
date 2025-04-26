@@ -1,5 +1,5 @@
 {
-    "exp_name": "resnet-ring1-rr-all-ir",
+    "exp_name": "resnet-ring2-hr-all-ir",
     "mode": "5fold",
     "split":{
         "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
@@ -13,9 +13,9 @@
     }
     },
     "dataset":{
-        "ring_type": "ring1",
-        "input_type": ["ir-filtered-rr"],
-        "label_type": ["resp_rr"],
+        "ring_type": "ring2",
+        "input_type": ["ir-filtered"],
+        "label_type": ["hr"],
         "shuffle": true,
         "batch_size": 128,
         "quality_assessment": {

@@ -1,5 +1,5 @@
 {
-    "exp_name": "resnet-ring1-rr-all-ir",
+    "exp_name": "inception-time-ring2-rr-all-ir",
     "mode": "5fold",
     "split":{
         "train": ["00009", "00012", "00005", "00020", "00031", "00022", "00029", "00016", "00026", "00024", "00014", "00010", "00011", "00027", "00008", "00019", "00030", "00003", "00025", "00006", "00033"], 
@@ -13,7 +13,7 @@
     }
     },
     "dataset":{
-        "ring_type": "ring1",
+        "ring_type": "ring2",
         "input_type": ["ir-filtered-rr"],
         "label_type": ["resp_rr"],
         "shuffle": true,
@@ -30,31 +30,27 @@
         "accel_combined_method": "magnitude"
     },
     "seed": 42,
-    "csv_path": "csv/resnet/resnet.csv",
-    "img_path": "img/resnet",
+    "csv_path": "csv/inception_time/inception_time.csv",
+    "img_path": "img/inception_time",
     "method": {
-        "name": "resnet",
+        "name": "inception_time",
         "type": "ML", 
         "model_path": null,
         "params":{
-            "in_channels": 1,  
-            "base_filters": 32,
-            "kernel_size": 5,
-            "stride": 1,
-            "groups": 1,
-            "n_block": 8,
-            "downsample_gap": 2,
-            "increasefilter_gap": 2,
-            "use_do": true,
-            "dropout_p": 0.3,
-            "use_final_do": false,
-            "final_dropout_p": 0.5,
-            "backbone": false,
-            "final_proj":"last"
+            "in_channels": 1,
+            "out_dim": 200,
+            "num_blocks": 1,
+            "num_inception_per_block": 2,
+            "kernel_sizes": [9, 19],
+            "bottleneck_channels": 16,
+            "use_residual": true,
+            "channels_first": false,
+            "verbose": false,
+            "backbone": false
         }
     },
     "train":{
-        "device": "0",
+        "device": "1",
         "epochs": 200,
         "lr": 1e-3,
         "criterion": "mse",
@@ -78,7 +74,7 @@
         }
     },
     "test":{
-        "device": "0",
+        "device": "1",
         "batch_size": 128,
         "metrics": ["mae", "rmse", "mape", "pearson"],
         "model_path": null,
