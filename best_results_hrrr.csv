@@ -136,6 +136,8 @@ transformer-latest,test,ring2,,oura_hr,['ir-filtered'],"['sitting', 'spo2', 'tal
 transformer-latest,test,ring2,,oura_hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",transformer,200,0.001,mse,128,160,11.23±0.75,14.70±5.36,14.26±1.11,0.09±0.08
 transformer-latest,test,ring1,,hr,['ir-filtered'],"['sitting', 'spo2', 'talking', 'shaking_head', 'standing']",transformer,200,0.001,mse,128,1738,6.80±0.14,8.95±1.77,8.35±0.17,0.65±0.02
 transformer-latest,test,ring2,,hr,['ir-filtered'],"['sitting', 'spo2', 'talking', 'shaking_head', 'standing']",transformer,200,0.001,mse,128,1653,8.02±0.16,10.21±1.92,10.38±0.20,0.01±0.02
+transformer-latest,test,ring1,,hr,['ir-filtered'],"['deepsquat', 'striding']",transformer,200,0.001,mse,128,191,18.26±1.05,23.28±7.33,27.21±2.63,0.04±0.07
+transformer-latest,test,ring2,,hr,['ir-filtered'],"['deepsquat', 'striding']",transformer,200,0.001,mse,128,181,16.73±1.02,21.59±6.82,21.82±2.13,0.06±0.07
 mamba2-latest,5fold,ring1,,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",mamba2,200,0.0001,mse,32,1929,9.12±0.20,12.55±2.79,12.35±0.36,0.51±0.02
 mamba2-latest,5fold,ring2,,hr,['ir-filtered'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",mamba2,200,0.0001,mse,32,1834,9.55±0.19,12.66±2.67,12.37±0.32,0.02±0.02
 mamba2-latest,5fold,ring1,,resp_rr,['ir-filtered-rr'],"['sitting', 'spo2', 'deepsquat', 'talking', 'shaking_head', 'standing', 'striding']",mamba2,200,0.0001,mse,32,1870,3.29±0.06,4.23±0.79,22.20±0.60,0.15±0.02
