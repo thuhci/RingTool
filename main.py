@@ -165,8 +165,23 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
                     checkpoint_path = config["test"]["model_path"]
                     logging.info(f"Using checkpoint path from config model_path: {checkpoint_path}")
                 else:
-                    checkpoint_dir = os.path.join("models", exp_name, task, current_fold)
-                    checkpoint_path = os.path.join(checkpoint_dir, f"{exp_name}_{task}_{current_fold}_best.pt")
+                    checkpoint_subdir = "hr" if task in ["samsung_hr", "oura_hr"] else task
+                    
+                    # example: exp_name: inception-time-ring1-samsung_hr-motion-ir -> inception-time-ring1-hr-all-ir
+                    if "motion" in exp_name:
+                        exp_name_subdir = exp_name.replace("motion", "all")
+                    elif "stationary" in exp_name:
+                        exp_name_subdir = exp_name.replace("stationary", "all")
+                    else:
+                        exp_name_subdir = exp_name
+                    if "samsung_hr" in exp_name_subdir:
+                        exp_name_subdir = exp_name_subdir.replace("samsung_hr", "hr")
+                    elif "oura_hr" in exp_name_subdir:
+                        exp_name_subdir = exp_name_subdir.replace("oura_hr", "hr")
+                    
+
+                    checkpoint_dir = os.path.join("models", exp_name_subdir, checkpoint_subdir, current_fold)
+                    checkpoint_path = os.path.join(checkpoint_dir, f"{exp_name_subdir}_{checkpoint_subdir}_{current_fold}_best.pt")
                     logging.info(f"Using checkpoint path from default setting. checkpoint_path: {checkpoint_path}")
                 if not os.path.exists(checkpoint_path):
                     logging.error(f"Checkpoint {checkpoint_path} not found. Maybe you need to train the model first.")
