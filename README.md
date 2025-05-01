@@ -66,7 +66,7 @@ rings/
   └── subject_ringtype.pkl
       ├── id, start, end, fs
       ├── ir, red, ax, ay, az, bvp, resp (np.array)
-      ├── hr, rep_hr, spo2, samsung_hr, oura_hr, BP_sys, BP_dia (numeric)
+      ├── hr, resp_rr, spo2, samsung_hr, oura_hr, BP_sys, BP_dia (numeric)
       ├── Experiment, Label (string)
 ```
 Each `.pkl` file contains multi-modal physiological data collected from smart rings. Sensor signals (ir, red, ax, ay, az, bvp, resp) are stored as np.array, while other entries (e.g., hr, spo2, BP_sys, Label) are scalar values or strings. Data is synchronized and annotated with timestamps.
