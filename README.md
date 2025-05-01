@@ -5,7 +5,9 @@ RingTool is an open platform for health sensing and data analysis with smart rin
 
 ![RingTool System Overview](figures/structure.jpg)
 
-## 📊 Dataset
+## 🗃️ Dataset
+> The complete dataset will be released upon acceptance of our paper.
+
 ### Visualization
 Visualization of the ring signal and corresponding medical ground truth. Below is an example of the reflective ring (Ring 1)'s visualizations of the raw data for different activities. For more samples, please refer to the [visualizations](visualizations) folder.
 
@@ -58,7 +60,7 @@ Medical Ground Distribution of HR, RR, SpO2, and BP
 You can follow the collection protocol to collect your own ring dataset. Be remindful to make it the same format as our data, which should be a directory of npy files as below. 
 
 ``` 
-data_daily.npy (data_sport.npydata_health.npy) 
+data.npy
 - subject
   ring1: timestamp,green,ir,red,ax,ay,az
   ring2: timestamp,green,ir,red,ax,ay,az
@@ -66,15 +68,27 @@ data_daily.npy (data_sport.npydata_health.npy)
   hr: timestamp,hr
   spo2: timestamp,spo2
   resp: timestamp,resp
-  ecg: timestamp,ecg
-  ecg_hr: timestamp,ecg_hr
-  ecg_rr: timestamp,ecg_rr
   samsung: timestamp,hr
   oura: start, end, hr
   BP: start, end,sys,dia
   Experiment: Health, Daily, Sport
   Labels: start, end, label
 ```
+
+## 📊 Benchmark
+For each parameter, we compare both physics-based and supervised learning approaches, examining the performance differences between reflective (Ring 1) and transmissive (Ring 2) sensing modalities across various user activities and physiological states. The best results for each task are summarized in the below table.
+
+| Task | Method / Ring | MAE | RMSE | MAPE | Pearson | Method / Ring | MAE | RMSE | MAPE | Pearson |
+|------|---------------|------------|-------------|-------------|----------------|---------------|------------|-------------|-------------|----------------|
+|      | **Ring 1 (Reflective)**|            |             |             |                | **Ring 2 (Transmissive)**|          |             |             |                |
+| HR   | ResNet        | 5.18       | 8.96        | 6.99        | 0.73           | ResNet        | 8.09       | 11.51       | 10.49       | 0.37           |
+| RR   | Peak          | 2.98       | 4.12        | 18.39       | 0.50           | Mamba         | 3.30       | 4.28        | 21.20       | 0.13           |
+| SpO2 | ResNet        | 3.22       | 4.46        | 3.57        | 0.01           | Ratio         | 3.31       | 3.95        | 3.58        | 0.28           |
+| SBP  | Transformer   | 13.33      | 16.10       | 12.53       | 0.25           | Mamba         | 14.56      | 17.76       | 13.79       | 0.09           |
+| DBP  | Transformer   | 7.56       | 9.80        | 11.80       | -0.02          | Transformer   | 8.06       | 10.54       | 12.57       | -0.15          |
+
+_For all cardiovascular parameters: MAE = Mean Absolute Error (HR/RR: BPM, BP: mmHg, SpO2: %), RMSE = Root Mean Square Error (HR/RR: BPM, BP: mmHg, SpO2: %), MAPE = Mean Absolute Percentage Error (%), Pearson = Pearson Correlation Coefficient_
+
 
 
 ## ✨ Features
