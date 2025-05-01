@@ -332,10 +332,7 @@ def do_run_experiment(config: Dict, data_path: str, send_notification_slack=Fals
 
 if __name__ == '__main__':
     # Default single config path (can be overridden or ignored)
-    default_config_path = "./config/Resnet.json"
-    # default_config_path = "./config/Transformer.json"
-    # default_config_path = "./config/Mamba2.json"
-    # default_config_path = "./config/InceptionTime.json"
+    default_config_path = "config/supervised/ring1/hr/ir/resnet-ring1-hr-all-ir.json"
 
     warnings.filterwarnings('ignore', category=UserWarning, module='torch.nn')
 

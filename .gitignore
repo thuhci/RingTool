@@ -32,3 +32,5 @@ run.sh
 .models-backup/
 
 data_path.toml
+
+.backup/
