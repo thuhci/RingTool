@@ -5,6 +5,70 @@ RingTool is an open platform for health sensing and data analysis with smart rin
 
 ![RingTool System Overview](figures/structure.jpg)
 
+## 📊 Dataset
+Visualization of ring signal and corresponding medical ground truth.
+
+![Dataset Visualization](figures/00017_ring1_processed.png)
+
+
+Our data was collected from two certain protocols.
+
+> **Stimulus-evoked data collection procedure across physiological states.** The protocol consists of three main activities: (1) A 10-minute seated resting, (2) A 9-minute supervised low-oxygen simulation, and (3) Two 2-minute sessions of deep squat exercises. Blood pressure measurements were taken before and after each activity, while physiological data was continuously recorded by our custom rings and periodically measured by commercial rings for comparison.
+![Health Experiment](figures/healthExperiment.png)
+
+> **Data collection procedure across daily activities.** The protocol consists of five activity segments: (1) A 30-minute seated resting, (2) 5-minute sitting and talking, (3) 5-minute head movement, (4) 5-minute standing, and (5) 5-minute walking in place. Participants wore the oximeter, Ring 1 (reflective), Ring 2 (transmissive), and respiratory band throughout all activities.
+![Daily Experiment](figures/dailyExperiment.png)
+
+
+Activity and reference label details in $\tau$-Ring dataset.
+| Activity               | Description                                                                       | Duration (hrs) |
+|------------------------|-----------------------------------------------------------------------------------|----------------|
+| All                    | Collective data from all activities listed below                                  | 28.21          |
+| Sitting                | Participant in stationary seated position                                         | 11.39          |
+| Talking                | Counting from one to one hundred repeatedly                                       | 0.93           |
+| Shaking Head           | Head rotation in various directions                                               | 0.94           |
+| Standing               | Participant in stationary standing position                                       | 0.93           |
+| Walking                | Walking in place with natural arm swinging                                        | 0.91           |
+| Low Oxygen Simulation  | Wearing mask with low-oxygen gas to simulate hypoxemia                            | 4.08           |
+| Deep Squat             | Full range of motion squat exercise                                               | 1.61           |
+| Others                 | User study preparation, device synchronization, blood pressure measurement and other situations not recorded with rings | 9.26           |
+
+
+| Label   | Description                           | Mean&plusmn;STD        | Range (Min, Max)      | Count   |
+|---------|---------------------------------------|----------------------|-----------------------|---------|
+| BVP     | Blood Volume Pulse signal samples     | -                    | -                     | 1664446 |
+| Resp    | Respiratory waveform samples          | -                    | -                     | 3953694 |
+| HR      | Heart Rate measurements               | 80.24&plusmn;12.39 BPM | (26.03, 125.93) BPM   | 76586   |
+| RR      | Respiratory Rate calculated from Resp | 17.28&plusmn;4.55 BPM  | (6.04, 29.86) BPM     | 4205    |
+| SpO2    | Blood Oxygen Saturation measurements  | 96.33&plusmn;2.46 %   | (78.97, 99.00) %      | 76575   |
+| SBP     | Systolic Blood Pressure measurements  | 106.85&plusmn;16.29 mmHg| (78.00, 142.00) mmHg  | 112     |
+| DBP     | Diastolic Blood Pressure measurements | 65.85&plusmn;9.41 mmHg | (43.00, 96.00) mmHg   | 112     |
+| Samsung | Samsung Galaxy Ring HR measurements   | 92.59&plusmn;23.61 BPM | (50.00, 153.00) BPM   | 128     |
+| Oura    | Oura Gen 3 Ring HR measurements       | 89.67&plusmn;22.32 BPM | (36.00, 155.00) BPM   | 118     |
+
+
+If you want to use your own data, please prepare it in the same format as our data, which should be npy format. 
+
+``` 
+data_daily.npy (data_sport.npydata_health.npy) 
+- subject
+  ring1: timestamp,green,ir,red,ax,ay,az
+  ring2: timestamp,green,ir,red,ax,ay,az
+  bvp: timestamp,bvp
+  hr: timestamp,hr
+  spo2: timestamp,spo2
+  resp: timestamp,resp
+  ecg: timestamp,ecg
+  ecg_hr: timestamp,ecg_hr
+  ecg_rr: timestamp,ecg_rr
+  samsung: timestamp,hr
+  oura: start, end, hr
+  BP: start, end,sys,dia
+  Experiment: Health, Daily, Sport
+  Labels: start, end, label
+```
+
+
 ## ✨ Features
 ### ⚙️ Toolkit Configuration
 Built with Python/PyTorch, RingTool allows customization of:
@@ -129,41 +193,6 @@ python3 main.py --data-path <replace-with-your-data-path> --config config/superv
 
 If you want to integrate Slack bot notifications, you can add the `--send-notification-slack` argument to the command. This will send notifications to a specified Slack channel when the training ends. See Also [How to slack training bot](notifications/README.md).
 
-
-## 📊 Dataset
-Visualization of ring signal and corresponding medical ground truth.
-
-![Dataset Visualization](figures/00017_ring1_processed.png)
-
-
-Our data was collected from two certain protocols.
-
-> **Stimulus-evoked data collection procedure across physiological states.** The protocol consists of three main activities: (1) A 10-minute seated resting, (2) A 9-minute supervised low-oxygen simulation, and (3) Two 2-minute sessions of deep squat exercises. Blood pressure measurements were taken before and after each activity, while physiological data was continuously recorded by our custom rings and periodically measured by commercial rings for comparison.
-![Health Experiment](figures/healthExperiment.png)
-
-> **Data collection procedure across daily activities.** The protocol consists of five activity segments: (1) A 30-minute seated resting, (2) 5-minute sitting and talking, (3) 5-minute head movement, (4) 5-minute standing, and (5) 5-minute walking in place. Participants wore the oximeter, Ring 1 (reflective), Ring 2 (transmissive), and respiratory band throughout all activities.
-![Daily Experiment](figures/dailyExperiment.png)
-
-If you want to use your own data, please prepare it in the same format as our data, which should be npy format. 
-
-``` 
-data_daily.npy (data_sport.npydata_health.npy) 
-- subject
-  ring1: timestamp,green,ir,red,ax,ay,az
-  ring2: timestamp,green,ir,red,ax,ay,az
-  bvp: timestamp,bvp
-  hr: timestamp,hr
-  spo2: timestamp,spo2
-  resp: timestamp,resp
-  ecg: timestamp,ecg
-  ecg_hr: timestamp,ecg_hr
-  ecg_rr: timestamp,ecg_rr
-  samsung: timestamp,hr
-  oura: start, end, hr
-  BP: start, end,sys,dia
-  Experiment: Health, Daily, Sport
-  Labels: start, end, label
-```
 
 ##  🧱 Contributing
 We welcome contributions to RingTool! If you have suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
