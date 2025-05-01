@@ -6,11 +6,13 @@ RingTool is an open platform for health sensing and data analysis with smart rin
 ![RingTool System Overview](figures/structure.jpg)
 
 ## 📊 Dataset
-Visualization of ring signal and corresponding medical ground truth.
+### Visualization
+Visualization of the ring signal and corresponding medical ground truth. Below is an example of the reflective ring (Ring 1)'s visualizations of the raw data for different activities. For more samples, please refer to the [visualizations](visualizations) folder.
 
 ![Dataset Visualization](figures/00017_ring1_processed.png)
 
 
+### Data Collection
 Our data was collected from two certain protocols.
 
 > **Stimulus-evoked data collection procedure across physiological states.** The protocol consists of three main activities: (1) A 10-minute seated resting, (2) A 9-minute supervised low-oxygen simulation, and (3) Two 2-minute sessions of deep squat exercises. Blood pressure measurements were taken before and after each activity, while physiological data was continuously recorded by our custom rings and periodically measured by commercial rings for comparison.
@@ -20,6 +22,7 @@ Our data was collected from two certain protocols.
 ![Daily Experiment](figures/dailyExperiment.png)
 
 
+### Dataset Statistics
 Activity and reference label details in $\tau$-Ring dataset.
 | Activity               | Description                                                                       | Duration (hrs) |
 |------------------------|-----------------------------------------------------------------------------------|----------------|
@@ -47,7 +50,8 @@ Activity and reference label details in $\tau$-Ring dataset.
 | Oura    | Oura Gen 3 Ring HR measurements       | 89.67&plusmn;22.32 BPM | (36.00, 155.00) BPM   | 118     |
 
 
-If you want to use your own data, please prepare it in the same format as our data, which should be npy format. 
+### Prepare Your Own Data
+You can follow the collection protocol to collect your own ring dataset. Be remindful to make it the same format as our data, which should be a directory of npy files as below. 
 
 ``` 
 data_daily.npy (data_sport.npydata_health.npy) 
