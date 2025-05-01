@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="figures/RingTool-logo.png" alt="RingTool Logo" width="350">
+  <img src="figures/RingTool-logo.png" alt="RingTool Logo" width="50%">
 </div>
 
 # 💍 RingTool
