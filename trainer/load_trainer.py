@@ -33,24 +33,18 @@ class BaseTrainer:
                 raise ValueError(f"Unsupported model: {config['method']['name']}")
 
     def load_optimizer(self):
-        """加载优化器"""
-        raise NotImplementedError("子类需要实现 load_optimizer 方法")
+        raise NotImplementedError("Should implement load_optimizer method in subclass")
 
     def load_criterion(self):
-        """加载损失函数"""
-        raise NotImplementedError("子类需要实现 load_criterion 方法")
+        raise NotImplementedError("Should implement load_criterion method in subclass")
 
     def fit(self, train_loader, valid_loader, task=None, fold=None):
-        """训练模型"""
-        raise NotImplementedError("子类需要实现 fit 方法")
+        raise NotImplementedError("Subclass must implement fit method")
 
     def test(self, test_loader, checkpoint_path=None, task=None):
-        """测试模型"""
-        raise NotImplementedError("子类需要实现 test 方法")
+        raise NotImplementedError("Subclass must implement test method")
 
-# -------------------------------
-# 非监督测试器
-# -------------------------------
+
 class UnsupervisedTester(BaseTrainer):
     def __init__(self, model, config: Dict):
         super().__init__(model, config)
@@ -129,9 +123,6 @@ class UnsupervisedTester(BaseTrainer):
             **metrics
         }
 
-# -------------------------------
-# 监督训练器
-# -------------------------------
 
 class SupervisedTrainer(BaseTrainer):
     def __init__(self, model, config: Dict, eval_func=None):
@@ -206,7 +197,6 @@ class SupervisedTrainer(BaseTrainer):
             
         progress_bar = tqdm(range(epochs), desc="Training Progress")
         for epoch in progress_bar:
-            # 训练阶段
             self.model.train()
             train_loss = 0
             self.optimizer.zero_grad()
@@ -258,7 +248,7 @@ class SupervisedTrainer(BaseTrainer):
                 scaler.update() # scaler.update() should be called once per iteration, typically after optimizer.step()
                 self.optimizer.zero_grad()
             
-            # 验证阶段
+            # Validation
             self.model.eval()
             valid_loss = 0
             all_preds, all_targets = [], []
@@ -393,12 +383,11 @@ class SupervisedTrainer(BaseTrainer):
             **metrics
         }
 
-# -------------------------------
-# 训练器选择加载
-# -------------------------------
 
 def load_trainer(model, model_name: str, config: Dict):
-    """根据模型名称加载对应的训练器"""
+    """
+    Load the appropriate trainer based on the model name and configuration.
+    """
     # Case 1: Unsupervised models
     if model_name in ["peak", "fft", "ratio"]:
         return UnsupervisedTester(model, config)

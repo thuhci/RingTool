@@ -13,7 +13,7 @@ pip install slack_sdk toml
 2. Choose "From scratch" and provide the app name and workspace.
 3. Navigate to the **OAuth & Permissions** section.
 4. Under Bot Token Scopes, add the `chat:write` permission to allow the bot to send messages to Slack.
-5. Install the app to your workspace by following the provided instructions. You will get an OAuth token (starts with `xoxb-`), which you’ll use to authenticate the SDK.
+5. Install the app to your workspace by following the provided instructions. You will get an OAuth token (starts with `xoxb-`), which you'll use to authenticate the SDK.
 6. If you want the bot to send notifications in a specific channel, make sure the bot is added to that channel. You can do this by inviting the bot to the channel using `/invite @your_bot_name`.
 
 ## Fill in the Slack Token in slack_configs.toml

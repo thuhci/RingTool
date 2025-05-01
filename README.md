@@ -59,7 +59,7 @@ Medical Ground Distribution of HR, RR, SpO2, and BP
 
 
 ### Prepare Your Own Data
-You can follow our data collection protocol to build your own ring-based dataset. To ensure compatibility with our pipeline, your dataset should follow the same format—a directory containing  `.pkl` files organized as shown below:
+You can follow our data collection protocol to build your own ring-based dataset. To ensure compatibility with our pipeline, your dataset should follow the same format --- a directory containing  `.pkl` files organized as shown below:
 
 ``` 
 rings/

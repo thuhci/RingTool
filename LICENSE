@@ -6,33 +6,33 @@ http://licenses.ai/
 
 This RAIL-S License is generally applicable to any Source Code to be licensed with responsible use restrictions.
 
-The “RAIL” nomenclature indicates that there are use restrictions prohibiting the use of the Source Code. These restrictions are intended to avoid potential misuse of such Code. Even though derivative versions of the Source Code could be released under different licensing terms, the License specifies that the use restrictions in the original License must apply to such derivatives.
+The "RAIL" nomenclature indicates that there are use restrictions prohibiting the use of the Source Code. These restrictions are intended to avoid potential misuse of such Code. Even though derivative versions of the Source Code could be released under different licensing terms, the License specifies that the use restrictions in the original License must apply to such derivatives.
 
 NOW THEREFORE, You and Licensor agree as follows:
 
 1. Definitions 
 
-(a) "Contribution" means any software code, including modifications or additions to the Source Code, that is intentionally submitted to Licensor for inclusion in the Source Code base by the rights owner or by an individual or legal entity authorized to submit on behalf of the rights owner. For the purposes of this definition, “submitted” means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Source Code, but excluding communication that is conspicuously marked or otherwise designated in writing by the rights owner as "Not a Contribution." 
+(a) "Contribution" means any software code, including modifications or additions to the Source Code, that is intentionally submitted to Licensor for inclusion in the Source Code base by the rights owner or by an individual or legal entity authorized to submit on behalf of the rights owner. For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Source Code, but excluding communication that is conspicuously marked or otherwise designated in writing by the rights owner as "Not a Contribution." 
 
 (b) "Contributor" means Licensor and any individual or legal entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Source Code.
 
-(c) “Data” means a collection of information and/or content extracted from the dataset used with the Model, including to train, pretrain, or otherwise evaluate the Model. The Data is not licensed under this License. 
+(c) "Data" means a collection of information and/or content extracted from the dataset used with the Model, including to train, pretrain, or otherwise evaluate the Model. The Data is not licensed under this License. 
 
-(d) “Derivatives” means all works containing additions and/or modifications to the Source Code.   
+(d) "Derivatives" means all works containing additions and/or modifications to the Source Code.   
 
-(e) “Harm” includes but is not limited to physical, mental, psychological, financial and reputational damage, pain, or loss.
+(e) "Harm" includes but is not limited to physical, mental, psychological, financial and reputational damage, pain, or loss.
 
 (f) "License" means the terms and conditions for use, reproduction, and distribution as defined in this document.
 
-(g) “Licensor” means the rights owner or entity authorized by the rights owner that is granting the License, including the persons or entities that may have rights in the Source Code.
+(g) "Licensor" means the rights owner or entity authorized by the rights owner that is granting the License, including the persons or entities that may have rights in the Source Code.
 
-(h) “Model” means any accompanying machine-learning based assemblies (including checkpoints), consisting of learnt weights, parameters (including optimizer states), corresponding to the model architecture as embodied in the Source Code, that have been trained or tuned, in whole or in part on the Data, using the Source Code and other materials. 
+(h) "Model" means any accompanying machine-learning based assemblies (including checkpoints), consisting of learnt weights, parameters (including optimizer states), corresponding to the model architecture as embodied in the Source Code, that have been trained or tuned, in whole or in part on the Data, using the Source Code and other materials. 
 
-(i) “Permitted Purpose” means for academic or research purposes only. 
+(i) "Permitted Purpose" means for academic or research purposes only. 
 
-(j) “Source Code” means any collection of text written using human-readable programming language, including the code and scripts used to define, run, load, benchmark or evaluate a Model or any component thereof, and/or used to prepare data for training or evaluation. For clarity, the term “Source Code” as used in this License includes any and all Derivatives of such Source Code.  
+(j) "Source Code" means any collection of text written using human-readable programming language, including the code and scripts used to define, run, load, benchmark or evaluate a Model or any component thereof, and/or used to prepare data for training or evaluation. For clarity, the term "Source Code" as used in this License includes any and all Derivatives of such Source Code.  
 
-(k) “Third Parties” means individuals or legal entities that are not under common control with Licensor or You.
+(k) "Third Parties" means individuals or legal entities that are not under common control with Licensor or You.
 
 (l) "You" (or "Your")  means an individual or legal entity exercising permissions granted by this License.
 
