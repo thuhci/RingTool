@@ -1,4 +1,6 @@
-![RingTool Logo](figures/RingTool-logo.png)
+<div align="center">
+  <img src="figures/RingTool-logo.png" alt="RingTool Logo" width="350">
+</div>
 
 # 💍 RingTool
 RingTool is an open platform for health sensing and data analysis with smart rings. It processes raw **PPG** and **IMU** signals from ring sensors to estimate cardiovascular parameters (HR, RR, SpO2, BP). It offers configurable modules for data preprocessing, physics-based algorithms, supervised learning models (**ResNet**, **InceptionTime**, **Transformer**, **Mamba**), and systematic evaluation. The platform is designed to be flexible and extensible, allowing the community to build custom solutions for a wide range of health and wellness applications.
