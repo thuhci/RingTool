@@ -50,6 +50,10 @@ Activity and reference label details in $\tau$-Ring dataset.
 | Oura    | Oura Gen 3 Ring HR measurements       | 89.67&plusmn;22.32 BPM | (36.00, 155.00) BPM   | 118     |
 
 
+Medical Ground Distribution of HR, RR, SpO2, and BP
+![Medical Ground Distribution](figures/distribution.png)
+
+
 ### Prepare Your Own Data
 You can follow the collection protocol to collect your own ring dataset. Be remindful to make it the same format as our data, which should be a directory of npy files as below. 
 
