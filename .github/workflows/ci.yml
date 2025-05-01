@@ -68,24 +68,28 @@ jobs:
   #     - name: Run pytest
   #       run: pytest
 
-  check_pyc:
+  check_forbidden_files:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Find .pyc files
-        id: find_pyc
+      - name: Find forbidden files (.pyc, .log)
+        id: find_forbidden
         run: |
-          find . -name "*.pyc" -print0 | while IFS= read -r -d $'\0' file; do
-            echo "::warning file=$file::Found a .pyc file."
-            echo "found_pyc=true" >> "$GITHUB_OUTPUT"
+          found_file=false
+          find . \( -name "*.pyc" -o -name "*.log" \) -print0 | while IFS= read -r -d $'\0' file; do
+            echo "::warning file=$file::Found a forbidden file ($file)."
+            found_file=true
           done
+          if [ "$found_file" = true ]; then
+            echo "found_forbidden=true" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Fail if .pyc files are found
-        if: steps.find_pyc.outputs.found_pyc == 'true'
+      - name: Fail if forbidden files are found
+        if: steps.find_forbidden.outputs.found_forbidden == 'true'
         run: |
-          echo "Error: .pyc files should not be included in the repository."
+          echo "Error: Forbidden files (.pyc, .log) should not be included in the repository."
           exit 1
 
   check_csv:
