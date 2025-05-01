@@ -59,23 +59,18 @@ Medical Ground Distribution of HR, RR, SpO2, and BP
 
 
 ### Prepare Your Own Data
-You can follow the collection protocol to collect your own ring dataset. Be remindful to make it the same format as our data, which should be a directory of npy files as below. 
+You can follow our data collection protocol to build your own ring-based dataset. To ensure compatibility with our pipeline, your dataset should follow the same format—a directory containing  `.pkl` files organized as shown below:
 
 ``` 
-data.npy
-- subject
-  ring1: timestamp,green,ir,red,ax,ay,az
-  ring2: timestamp,green,ir,red,ax,ay,az
-  bvp: timestamp,bvp
-  hr: timestamp,hr
-  spo2: timestamp,spo2
-  resp: timestamp,resp
-  samsung: timestamp,hr
-  oura: start, end, hr
-  BP: start, end,sys,dia
-  Experiment: Health, Daily, Sport
-  Labels: start, end, label
+rings/
+  └── subject_ringtype.pkl
+      ├── id, start, end, fs
+      ├── ir, red, ax, ay, az, bvp, resp (np.array)
+      ├── hr, rep_hr, spo2, samsung_hr, oura_hr, BP_sys, BP_dia (numeric)
+      ├── Experiment, Label (string)
 ```
+Each `.pkl` file contains multi-modal physiological data collected from smart rings. Sensor signals (ir, red, ax, ay, az, bvp, resp) are stored as np.array, while other entries (e.g., hr, spo2, BP_sys, Label) are scalar values or strings. Data is synchronized and annotated with timestamps.
+
 
 ## 📊 Benchmark
 For each parameter, we compare both physics-based and supervised learning approaches, examining the performance differences between reflective (Ring 1) and transmissive (Ring 2) sensing modalities across various user activities and physiological states. The best results for each task are summarized in the below table.
