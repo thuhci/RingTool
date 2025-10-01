@@ -14,7 +14,7 @@ from constants.dataset import (
     DatasetType,
 )
 from utils.accel_features import extract_accel_features_cuda
-from utils.utils import calculate_metrics, save_metrics_to_csv
+from utils.utils import calculate_metrics, save_metrics_to_csv, physiological_filter
 
 
 def load_dataset(config: Dict, raw_data: pd.DataFrame, task: str="hr", channels: List=None, dataset_type=DatasetType.TRAIN, scenarios: List[str]=None):
@@ -185,10 +185,7 @@ class RingToolDataset(Dataset):
                 metrics = {"note": "No data available for metrics calculation"}
             
             
-        logging.info(f"Loaded {len(self)} samples for task {self.task} with channels {self.channels} for dataset type {self.dataset_type}.")
-        if len(self) == 0:
-            logging.warning(f"No data loaded for task {self.task} with channels {self.channels} for dataset type {self.dataset_type}. Please check your data and configuration.")
-
+        
     def __len__(self):
         return len(self.data)
 

@@ -30,7 +30,7 @@ def generate_split_config(mode: str, split: Dict) -> List[Dict]:
     # 5-fold cross-validation.
     # if test set is fold 4, then valid set is fold 5 and train set is 1, 2, 3 train set is fold 1, 2, 3
     if mode == ExperimentMode.FIVE_FOLD.value or mode == ExperimentMode.TEST.value:
-        for i in range(5):
+        for i in range(5):  #  full 5-fold training/testing
             test_fold = i + 1  # Folds are 1-indexed
             valid_fold = (i + 1) % 5 + 1  # Wraps around to fold 1 after fold 5
 
@@ -207,7 +207,8 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
                     raw_data=train_data,
                     channels=channels,
                     task=train_task,
-                    dataset_type=DatasetType.TRAIN
+                    dataset_type=DatasetType.TRAIN,
+                    scenarios=config["dataset"]["task"]  # 训练也按场景过滤
                 )
                 train_loader = DataLoader(train_dataset, batch_size=config["dataset"]["batch_size"], shuffle=True)
                 
@@ -217,7 +218,8 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
                     raw_data=valid_data,
                     channels=channels,
                     task=task,
-                    dataset_type=DatasetType.VALID
+                    dataset_type=DatasetType.VALID,
+                    scenarios=config["dataset"]["task"]  # 验证也按场景过滤
                 )
                 valid_loader = DataLoader(valid_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
                 
@@ -234,14 +236,86 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
                 channels=channels,
                 task=task,
                 dataset_type=DatasetType.TEST,
-                scenarios=config["dataset"]["task"],  # TODO: naming issue
+                scenarios=config["dataset"]["task"],  
             )
             test_loader = DataLoader(test_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
             test_results = trainer.test(test_loader, checkpoint_path, task)
             preds_and_targets = test_results["preds_and_targets"]
             all_preds_and_targets.append(preds_and_targets)
 
+            # --- Save preds/targets pairs to CSV ---
+            try:
+                exp_name = config.get("exp_name", "exp")
+                fold = split_config.get("fold", "Fold-1")
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                # Save under csv/<exp_name>/<task>/ 
+                pairs_dir = os.path.join(base_dir, "csv", exp_name, task)
+                os.makedirs(pairs_dir, exist_ok=True)
+                pairs_csv = os.path.join(pairs_dir, f"{exp_name}_{task}_{fold}.csv")
+
+                preds, targets = preds_and_targets
+
+                import pandas as _pd
+                _df = _pd.DataFrame({
+                    "pred": preds.detach().cpu().numpy().flatten(),
+                    "target": targets.detach().cpu().numpy().flatten(),
+                })
+                # If multiple folds want to append into one file instead, user can change filename to exp_name_task.csv
+                _df.to_csv(pairs_csv, index=False)
+                logging.info(f"Saved preds/targets pairs to {pairs_csv} with {len(_df)} rows.")
+            except Exception as e:
+                logging.error(f"Failed to save preds/targets pairs CSV: {e}")
+
             all_test_results.append((split_config["fold"], task, test_results))
+
+            # --- Scenario group testing ---
+            scenario_groups = {
+                "stationary": ["sitting", "talking", "shaking_head", "standing"],
+                "motion": ["striding", "deepsquat"],
+                "spo2": ["spo2"],
+            }
+            for group_name, group_scenarios in scenario_groups.items():
+                try:
+                    group_dataset = load_dataset(
+                        config=config,
+                        raw_data=test_data,
+                        channels=channels,
+                        task=task,
+                        dataset_type=DatasetType.TEST,
+                        scenarios=group_scenarios,
+                    )
+                    if len(group_dataset) == 0:
+                        logging.warning(f"No samples for group {group_name} in fold {current_fold}.")
+                        continue
+                    group_loader = DataLoader(group_dataset, batch_size=config["dataset"]["batch_size"], shuffle=False)
+                    # 使用分组后缀的 task
+                    group_task = f"{task}_{group_name}"
+                    # 临时覆盖 config["dataset"]["task"]，使 CSV 的 dataset_task 反映本次分组
+                    _orig_scenarios = config.get("dataset", {}).get("task", None)
+                    try:
+                        config["dataset"]["task"] = group_scenarios
+                        group_results = trainer.test(group_loader, checkpoint_path, group_task)
+                    finally:
+                        if _orig_scenarios is not None:
+                            config["dataset"]["task"] = _orig_scenarios
+                    # save pairs
+                    try:
+                        preds_g, targets_g = group_results["preds_and_targets"]
+                        import pandas as _pd
+                        _df_g = _pd.DataFrame({
+                            "pred": preds_g.detach().cpu().numpy().flatten(),
+                            "target": targets_g.detach().cpu().numpy().flatten(),
+                        })
+                        base_dir = os.path.dirname(os.path.abspath(__file__))
+                        pairs_dir_g = os.path.join(base_dir, "csv", exp_name, task)
+                        os.makedirs(pairs_dir_g, exist_ok=True)
+                        pairs_csv_g = os.path.join(pairs_dir_g, f"{exp_name}_{task}_{current_fold}_{group_name}.csv")
+                        _df_g.to_csv(pairs_csv_g, index=False)
+                        logging.info(f"Saved group pairs to {pairs_csv_g} with {len(_df_g)} rows.")
+                    except Exception as e:
+                        logging.error(f"Failed to save group pairs CSV for {group_name}: {e}")
+                except Exception as e:
+                    logging.error(f"Group testing failed for {group_name} in {current_fold}: {e}")
 
         metrics = calculate_avg_metrics(all_preds_and_targets)
         logging.critical(f"Average metrics across all tasks: "

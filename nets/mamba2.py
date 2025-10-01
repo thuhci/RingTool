@@ -33,7 +33,29 @@ class MambaStack(nn.Module):
 
     def forward(self, x):
         for layer, norm in zip(self.layers, self.norms):
-            y = layer(x)
+            try:
+                y = layer(x)
+            except TypeError as e:
+                # Common when fused CPP op (causal_conv1d_fwd_function) is missing
+                if "NoneType" in str(e) or "not callable" in str(e):
+                    if hasattr(layer, "use_mem_eff_path") and getattr(layer, "use_mem_eff_path"):
+                        layer.use_mem_eff_path = False
+                        y = layer(x)
+                    else:
+                        raise
+                else:
+                    raise
+            except Exception as e:
+                # Broad fallback for Triton/SSD fused path issues
+                message = str(e)
+                if ("mamba_ssm" in message) or ("triton" in message) or ("causal_conv1d" in message):
+                    if hasattr(layer, "use_mem_eff_path") and getattr(layer, "use_mem_eff_path"):
+                        layer.use_mem_eff_path = False
+                        y = layer(x)
+                    else:
+                        raise
+                else:
+                    raise
             y = norm(y)
             x = x + y
         return self.drop(x)
