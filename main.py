@@ -22,7 +22,7 @@ from notifications.slack import (
     setup_slack,
 )
 from trainer.load_trainer import load_trainer
-from utils.utils import calculate_avg_metrics, save_metrics_to_csv
+from utils.utils import calculate_avg_metrics, save_metrics_to_csv, save_prediction_pairs_detailed
 
 
 def generate_split_config(mode: str, split: Dict) -> List[Dict]:
@@ -243,6 +243,21 @@ def supervised(config: Dict, data_path: str) -> List[Tuple[str, str, Dict]]:
             all_preds_and_targets.append(preds_and_targets)
 
             all_test_results.append((split_config["fold"], task, test_results))
+            
+            # Save prediction pairs when --save-predictions flag is enabled
+            if config.get('_save_predictions_', False):
+                exp_name = config.get("exp_name", "unknown")
+                csv_path = os.path.join("predictions", exp_name, f"{split_config['fold']}.csv")
+                preds, targets = preds_and_targets
+                save_prediction_pairs_detailed(
+                    preds=preds,
+                    targets=targets,
+                    save_path=csv_path,
+                    metadata=None,  # main.py doesn't collect metadata
+                    task=task,
+                    fold=split_config["fold"],
+                    exp_name=exp_name
+                )
 
         metrics = calculate_avg_metrics(all_preds_and_targets)
         logging.critical(f"Average metrics across all tasks: "
@@ -340,6 +355,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='RingTool.')
     parser.add_argument('--data-path', type=str, default=None, help='Path to the data folder.')
     parser.add_argument('--send-notification-slack', action="store_true", help='Send notification to slack.')
+    parser.add_argument('--save-predictions', action="store_true", help='Save detailed prediction pairs to predictions directory.')
 
     # --- Group for mutually exclusive config options ---
     group = parser.add_mutually_exclusive_group(required=False) # Make the group itself not strictly required initially
@@ -359,6 +375,7 @@ if __name__ == '__main__':
     batch_configs_dirs = args.batch_configs_dirs # This will be a list of paths or None
     single_config_path = args.config
     send_notification_slack = args.send_notification_slack
+    save_predictions = args.save_predictions
 
     config_files_to_run = []
 
@@ -415,6 +432,7 @@ if __name__ == '__main__':
                 
                 # Add config path to config dict for potential logging inside do_run_experiment
                 config['_config_path_'] = config_file_path 
+                config['_save_predictions_'] = save_predictions  # Pass flag to experiment
                 
                 do_run_experiment(config, data_path, send_notification_slack)
                 

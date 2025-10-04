@@ -13,6 +13,7 @@ from unsupervised.hr.hr import get_hr
 from unsupervised.rr.rr import get_rr
 from unsupervised.spo2.spo2 import get_spo2
 from utils.utils import calculate_metrics, plot_and_save_metrics, save_config, save_metrics_to_csv
+from utils.utils import physiological_filter
 
 
 class BaseTrainer:
@@ -106,6 +107,22 @@ class UnsupervisedTester(BaseTrainer):
         all_predictions = torch.tensor(all_predictions).reshape(-1, 1)
         all_targets = torch.tensor(all_targets).reshape(-1, 1)
         
+        # Apply physiological range filtering
+        try:
+            filter_task = task
+            for _suffix in ("_stationary", "_motion", "_spo2"):
+                if filter_task.endswith(_suffix):
+                    filter_task = filter_task[: -len(_suffix)]
+                    break
+            mask_u = physiological_filter(all_targets, filter_task, behavior="mask")
+            if not torch.is_tensor(mask_u):
+                mask_u = torch.from_numpy(mask_u)
+            mask_u = mask_u.to(dtype=torch.bool)
+            all_predictions = all_predictions[mask_u]
+            all_targets = all_targets[mask_u]
+        except Exception as e:
+            logging.warning(f"physiological_filter failed in UnsupervisedTester.test for task {task}: {e}")
+        
         # Calculate metrics
         metrics = calculate_metrics(all_predictions, all_targets)
         logging.debug(f"Task: {task} - "
@@ -172,16 +189,28 @@ class SupervisedTrainer(BaseTrainer):
             patience = self.config.get("train", {}).get("scheduler", {}).get("patience", 10)
             min_lr = self.config.get("train", {}).get("scheduler", {}).get("min_lr", 1e-6)
             threshold = self.config.get("train", {}).get("scheduler", {}).get("threshold", 1e-4)
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                self.optimizer,
-                mode='min',              # min for loss, max for accuracy
-                factor=factor,           # multiply LR by this factor
-                patience=patience,       # wait N epochs before reducing
-                threshold=threshold,     # min change to count as an improvement
-                cooldown=0,              # wait time after LR is reduced
-                min_lr=min_lr,           # lower bound on LR
-                verbose=True             # log messages
-            )
+            # Some torch versions do not support `verbose` in ReduceLROnPlateau
+            try:
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    self.optimizer,
+                    mode='min',
+                    factor=factor,
+                    patience=patience,
+                    threshold=threshold,
+                    cooldown=0,
+                    min_lr=min_lr,
+                    verbose=True,
+                )
+            except TypeError:
+                scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                    self.optimizer,
+                    mode='min',
+                    factor=factor,
+                    patience=patience,
+                    threshold=threshold,
+                    cooldown=0,
+                    min_lr=min_lr,
+                )
         exp_name = self.config.get("exp_name", "default_experiment")
         checkpoint_dir = os.path.join("models", exp_name, task, fold)
         
@@ -215,7 +244,30 @@ class SupervisedTrainer(BaseTrainer):
 
                 with autocast():
                     outputs, _ = self.model(inputs)
-                    loss = self.criterion(outputs, labels)
+                    # Filter out samples with labels outside physiological range before loss computation
+                    try:
+                        filter_task = task
+                        for _suffix in ("_stationary", "_motion", "_spo2"):
+                            if filter_task.endswith(_suffix):
+                                filter_task = filter_task[: -len(_suffix)]
+                                break
+                        mask_np = physiological_filter(labels, filter_task, behavior="mask")
+                        if not torch.is_tensor(mask_np):
+                            mask = torch.from_numpy(mask_np).to(device=self.device, dtype=torch.bool)
+                        else:
+                            mask = mask_np.to(device=self.device, dtype=torch.bool)
+                        if mask.ndim > 1:
+                            mask = mask.squeeze(-1)
+                        if mask.sum().item() == 0:
+                            raise ValueError("All samples masked in this batch; skipping batch.")
+                        outputs_m = outputs[mask]
+                        labels_m = labels[mask]
+                    except Exception as e:
+                        # Use unfiltered data if physiological filtering fails
+                        logging.warning(f"physiological mask failed in train batch {idx}: {e}")
+                        outputs_m, labels_m = outputs, labels
+
+                    loss = self.criterion(outputs_m, labels_m)
 
                 # Check for NaNs in loss
                 if torch.isnan(loss):
@@ -256,13 +308,52 @@ class SupervisedTrainer(BaseTrainer):
                 for inputs, labels in valid_loader:
                     inputs, labels = inputs.to(self.device), labels.to(self.device)
                     outputs, _ = self.model(inputs)
-                    loss = self.criterion(outputs, labels)
+                    # Filter validation samples outside physiological range
+                    try:
+                        filter_task = task
+                        for _suffix in ("_stationary", "_motion", "_spo2"):
+                            if filter_task.endswith(_suffix):
+                                filter_task = filter_task[: -len(_suffix)]
+                                break
+                        mask_np = physiological_filter(labels, filter_task, behavior="mask")
+                        if not torch.is_tensor(mask_np):
+                            mask = torch.from_numpy(mask_np).to(device=self.device, dtype=torch.bool)
+                        else:
+                            mask = mask_np.to(device=self.device, dtype=torch.bool)
+                        if mask.ndim > 1:
+                            mask = mask.squeeze(-1)
+                        if mask.sum().item() == 0:
+                            # Skip batch when all samples are filtered out
+                            continue
+                        outputs_m = outputs[mask]
+                        labels_m = labels[mask]
+                    except Exception as e:
+                        logging.warning(f"physiological mask failed in valid batch: {e}")
+                        outputs_m, labels_m = outputs, labels
+
+                    loss = self.criterion(outputs_m, labels_m)
                     valid_loss += loss.item()
-                    all_preds.append(outputs.cpu())
-                    all_targets.append(labels.cpu())
+                    all_preds.append(outputs_m.cpu())
+                    all_targets.append(labels_m.cpu())
             
             all_preds = torch.cat(all_preds, dim=0)
             all_targets = torch.cat(all_targets, dim=0)
+            
+            # Apply physiological range filtering for validation
+            try:
+                filter_task = task
+                for _suffix in ("_stationary", "_motion", "_spo2"):
+                    if filter_task.endswith(_suffix):
+                        filter_task = filter_task[: -len(_suffix)]
+                        break
+                mask_val = physiological_filter(all_targets, filter_task, behavior="mask")
+                if not torch.is_tensor(mask_val):
+                    mask_val = torch.from_numpy(mask_val)
+                mask_val = mask_val.to(dtype=torch.bool)
+                all_preds = all_preds[mask_val]
+                all_targets = all_targets[mask_val]
+            except Exception as e:
+                logging.warning(f"physiological_filter failed in validation for task {task}: {e}")
             
             # Update progress bar with metrics
             train_loss_avg = train_loss / len(train_loader)
@@ -352,8 +443,16 @@ class SupervisedTrainer(BaseTrainer):
         self.model.eval()
         test_loss = 0
         all_preds, all_targets = [], []
+        all_metadata = []  # Collect metadata for each sample
         with torch.no_grad():
-            for inputs, labels in tqdm(test_loader, desc="Testing"):
+            for batch_data in tqdm(test_loader, desc="Testing"):
+                # Handle both old format (inputs, labels) and new format (inputs, labels, metadata)
+                if len(batch_data) == 3:
+                    inputs, labels, metadata_list = batch_data
+                    all_metadata.extend(metadata_list)
+                else:
+                    inputs, labels = batch_data
+                    
                 inputs, labels = inputs.to(self.device), labels.to(self.device)
                 outputs, _ = self.model(inputs)
                 loss = self.criterion(outputs, labels)
@@ -362,6 +461,22 @@ class SupervisedTrainer(BaseTrainer):
                 all_targets.append(labels.cpu())
         all_preds = torch.cat(all_preds, dim=0)
         all_targets = torch.cat(all_targets, dim=0)
+        
+        # Apply physiological range filtering for test
+        try:
+            filter_task = task
+            for _suffix in ("_stationary", "_motion", "_spo2"):
+                if filter_task.endswith(_suffix):
+                    filter_task = filter_task[: -len(_suffix)]
+                    break
+            mask_test = physiological_filter(all_targets, filter_task, behavior="mask")
+            if not torch.is_tensor(mask_test):
+                mask_test = torch.from_numpy(mask_test)
+            mask_test = mask_test.to(dtype=torch.bool)
+            all_preds = all_preds[mask_test]
+            all_targets = all_targets[mask_test]
+        except Exception as e:
+            logging.warning(f"physiological_filter failed in SupervisedTrainer.test for task {task}: {e}")
         
         metrics = calculate_metrics(all_preds, all_targets)
         logging.critical(f"Task:{task} Test Loss: {test_loss / len(test_loader):.4f}, "
@@ -379,6 +494,7 @@ class SupervisedTrainer(BaseTrainer):
 
         return {
             "preds_and_targets": (all_preds, all_targets),
+            "metadata": all_metadata if all_metadata else None,  # Include metadata if available
             "loss": test_loss / len(test_loader),
             **metrics
         }

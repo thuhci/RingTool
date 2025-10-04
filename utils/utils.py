@@ -107,7 +107,7 @@ def calculate_avg_metrics(all_preds_and_targets: List[Tuple]) -> Dict:
     return metrics
 
 
-def save_metrics_to_csv(metrics: Dict, config: Dict, task: str, result_csv_path=None) -> str:
+def save_metrics_to_csv(metrics: Dict, config: Dict, task: str, result_csv_path=None, test_type: str = None) -> str:
     """
     Save evaluation metrics to a CSV file
     
@@ -116,6 +116,7 @@ def save_metrics_to_csv(metrics: Dict, config: Dict, task: str, result_csv_path=
         config (dict): Configuration dictionary with experiment settings
         task (str): Task name 
         result_csv_path (str, optional): Path to save the CSV file. If None, a default path will be created.
+        test_type (str, optional): Test type path like "all-scenarios", "by-group/motion", etc.
     
     Returns:
         str: Path where the CSV was saved
@@ -124,9 +125,17 @@ def save_metrics_to_csv(metrics: Dict, config: Dict, task: str, result_csv_path=
     
     if result_csv_path is None:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        csv_dir = os.path.join(base_dir, "csv", exp_name, task)
+        
+        # Determine test_type if not provided
+        if test_type is None:
+            from constants.scenarios import get_test_type_path
+            dataset_tasks = config.get("dataset", {}).get("task", [])
+            test_type = get_test_type_path(dataset_tasks)
+        
+        # New path structure: results/<exp_name>/<test_type>/summary.csv
+        csv_dir = os.path.join(base_dir, "results", exp_name, test_type)
         os.makedirs(csv_dir, exist_ok=True)
-        result_csv_path = os.path.join(csv_dir, f"{exp_name}.csv")
+        result_csv_path = os.path.join(csv_dir, "summary.csv")
     
     os.makedirs(os.path.dirname(result_csv_path), exist_ok=True)
     
@@ -309,3 +318,213 @@ def save_config(config: Dict, config_path: str) -> Optional[str]:
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         return None
+
+
+# ---------------- Physiological range filters ----------------
+def _to_numpy(values):
+    if isinstance(values, torch.Tensor):
+        return values.detach().cpu().numpy()
+    if isinstance(values, list):
+        return np.asarray(values)
+    return values
+
+
+def _from_numpy(values_np, like):
+    if isinstance(like, torch.Tensor):
+        return torch.from_numpy(values_np).to(dtype=like.dtype)
+    if isinstance(like, list):
+        return values_np.tolist()
+    return values_np
+
+
+def get_physiological_ranges() -> Dict[str, Tuple[float, float]]:
+    """
+    Return plausible physiological ranges for supported tasks.
+    Values outside these ranges are considered outliers/noise.
+    """
+    return {
+        # heart rate (bpm)
+        "hr": (40.0, 200.0),
+        "samsung_hr": (40.0, 200.0),
+        "oura_hr": (40.0, 200.0),
+        # respiratory rate (breaths per minute)
+        "resp_rr": (4.0, 30.0),
+        # oxygen saturation (%)
+        "spo2": (75.0, 100.0),
+        # blood pressure (mmHg)
+        "BP_sys": (60.0, 260.0),
+        "BP_dia": (30.0, 200.0),
+    }
+
+
+def filter_values_by_range(values, min_val: float, max_val: float, behavior: str = "filter", fill_value: Optional[float] = None):
+    """
+    Filter or clamp values by [min_val, max_val].
+
+    Args:
+        values: torch.Tensor | np.ndarray | list
+        min_val: lower bound (inclusive)
+        max_val: upper bound (inclusive)
+        behavior: 'filter' to drop out-of-range; 'clamp' to clip into range; 'mask' to only return mask
+        fill_value: when behavior='filter' and input is tensor/np with fixed shape not desired, ignored;
+                    when behavior='clamp' and value is NaN after processing, replaced by fill_value if provided
+
+    Returns:
+        If behavior='mask': (mask: np.ndarray[bool])
+        Else: (values_same_type, mask: np.ndarray[bool])
+    """
+    arr = _to_numpy(values)
+    mask = np.isfinite(arr) & (arr >= min_val) & (arr <= max_val)
+
+    if behavior == "mask":
+        return mask
+
+    if behavior == "filter":
+        filtered = arr[mask]
+        return _from_numpy(filtered, values), mask
+
+    # clamp
+    clamped = np.clip(arr, min_val, max_val)
+    if fill_value is not None:
+        clamped = np.nan_to_num(clamped, nan=fill_value)
+    return _from_numpy(clamped, values), mask
+
+
+def physiological_filter(values, task: str, behavior: str = "filter", fill_value: Optional[float] = None, custom_ranges: Optional[Dict[str, Tuple[float, float]]] = None):
+    """
+    Apply physiological range filtering by task.
+
+    Args:
+        values: torch.Tensor | np.ndarray | list
+        task: task key, e.g., 'hr', 'resp_rr', 'spo2', 'BP_sys', 'BP_dia', 'samsung_hr', 'oura_hr'
+        behavior: 'filter' | 'clamp' | 'mask'
+        fill_value: used when behavior='clamp' for NaN replacement
+        custom_ranges: optional override of default ranges
+
+    Returns:
+        behavior='mask' -> mask
+        otherwise -> (filtered_or_clamped_values, mask)
+    """
+    ranges = get_physiological_ranges()
+    if custom_ranges:
+        ranges.update(custom_ranges)
+    if task not in ranges:
+        logging.warning(f"physiological_filter: task {task} not in predefined ranges; returning input unchanged.")
+        if behavior == "mask":
+            return np.ones_like(_to_numpy(values), dtype=bool)
+        return values, np.ones_like(_to_numpy(values), dtype=bool)
+
+    min_v, max_v = ranges[task]
+    return filter_values_by_range(values, min_v, max_v, behavior=behavior, fill_value=fill_value)
+
+
+def collate_fn_with_metadata(batch):
+    """
+    Custom collate function for DataLoader to handle data with metadata.
+    
+    Args:
+        batch: List of samples where each sample is either:
+               - (data, label) tuple for normal data
+               - ((data, label), metadata) tuple for data with metadata
+    
+    Returns:
+        If metadata present: ((batch_data, batch_labels), batch_metadata)
+        Otherwise: (batch_data, batch_labels)
+    """
+    # Check if first sample has metadata
+    if isinstance(batch[0], tuple) and len(batch[0]) == 2 and isinstance(batch[0][1], dict):
+        # Has metadata: ((data, label), metadata)
+        data_label_pairs = [item[0] for item in batch]
+        metadata_list = [item[1] for item in batch]
+        
+        # Separate data and labels
+        data = torch.stack([item[0] for item in data_label_pairs])
+        labels = torch.stack([item[1] for item in data_label_pairs])
+        
+        return (data, labels), metadata_list
+    else:
+        # No metadata: (data, label)
+        data = torch.stack([item[0] for item in batch])
+        labels = torch.stack([item[1] for item in batch])
+        
+        return data, labels
+
+
+def save_prediction_pairs_detailed(
+    preds: torch.Tensor,
+    targets: torch.Tensor,
+    save_path: str,
+    metadata: Optional[List[Dict]] = None,
+    task: Optional[str] = None,
+    fold: Optional[str] = None,
+    exp_name: Optional[str] = None
+) -> bool:
+    """
+    Save detailed prediction pairs to a CSV file with metadata.
+    
+    Args:
+        preds: Prediction tensor
+        targets: Target tensor
+        save_path: Path to save the CSV file
+        metadata: Optional list of metadata dictionaries containing subject_id, scenario, timestamp, etc.
+        task: Task name
+        fold: Fold name
+        exp_name: Experiment name
+    
+    Returns:
+        bool: True if save was successful, False otherwise
+    """
+    try:
+        from datetime import datetime
+        
+        # Convert tensors to numpy
+        preds_np = preds.detach().cpu().numpy().flatten()
+        targets_np = targets.detach().cpu().numpy().flatten()
+        
+        # Create base dataframe
+        data_dict = {
+            'prediction': preds_np,
+            'target': targets_np,
+        }
+        
+        # Add metadata if available
+        if metadata is not None and len(metadata) == len(preds_np):
+            # Extract metadata fields
+            subject_ids = [m.get('subject_id', 'unknown') for m in metadata]
+            scenarios = [m.get('scenario', 'unknown') for m in metadata]
+            start_times = [m.get('start_time', None) for m in metadata]
+            end_times = [m.get('end_time', None) for m in metadata]
+            tasks = [m.get('task', task if task else 'unknown') for m in metadata]
+            
+            data_dict.update({
+                'subject_id': subject_ids,
+                'scenario': scenarios,
+                'start_time': start_times,
+                'end_time': end_times,
+                'task': tasks,
+            })
+        else:
+            # If no metadata, add basic info
+            if task:
+                data_dict['task'] = [task] * len(preds_np)
+            if fold:
+                data_dict['fold'] = [fold] * len(preds_np)
+        
+        if exp_name:
+            data_dict['exp_name'] = [exp_name] * len(preds_np)
+        
+        # Create DataFrame
+        df = pd.DataFrame(data_dict)
+        
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        
+        # Save to CSV
+        df.to_csv(save_path, index=False)
+        logging.info(f"Saved {len(df)} detailed prediction pairs to: {save_path}")
+        
+        return True
+        
+    except Exception as e:
+        logging.error(f"Failed to save detailed prediction pairs to {save_path}: {e}")
+        return False

@@ -256,6 +256,56 @@ python3 main.py --data-path <replace-with-your-data-path> --config config/superv
 If you want to integrate Slack bot notifications, you can add the `--send-notification-slack` argument to the command. This will send notifications to a specified Slack channel when the training ends. See Also [How to slack training bot](notifications/README.md).
 
 
+
+#### Physiological Range Filtering
+The training pipeline includes physiological range filtering to improve model quality by removing samples with physiologically impossible values. Filtering is applied during training and validation phases, but not during testing to evaluate true model performance.
+
+**Physiological ranges defined:**
+- Heart rate (HR): 40-200 bpm
+- Respiratory rate (RR): 4-30 breaths/min
+- Blood oxygen saturation (SpO2): 75-100%
+- Systolic blood pressure (SBP): 60-260 mmHg
+- Diastolic blood pressure (DBP): 30-200 mmHg
+
+The filtering is automatically applied in the standard training pipeline. Custom ranges can be specified via the `physiological_filter()` function in [`utils/utils.py`](utils/utils.py).
+
+#### Detailed Prediction Pairs
+To save detailed prediction pairs during training for subsequent analysis, use the `--save-predictions` flag:
+```sh
+python3 main.py --data-path <path> --config <config.json> --save-predictions
+```
+
+This generates CSV files in `predictions/<exp_name>/<fold>.csv` with the following format:
+```csv
+prediction,target,task,fold,exp_name
+75.68,78.0,hr,Fold-1,resnet-ring1-hr-all-ir
+82.31,80.0,hr,Fold-1,resnet-ring1-hr-all-ir
+```
+
+#### Batch Testing with Metadata
+For batch testing all trained models and generating predictions with complete metadata (subject ID, scenario, timestamps), use:
+```sh
+python3 test_all_models_predictions.py
+```
+
+This script:
+- Automatically finds all trained models in the `models/` directory
+- Tests each model across all folds
+- Generates detailed predictions with metadata:
+  ```csv
+  prediction,target,subject_id,scenario,start_time,end_time,task,exp_name
+  76.68,101.73,00023,sitting,1742822979.47,1742823009.47,hr,resnet-ring1-hr-all-ir
+  ```
+- Saves results to `predictions/<exp_name>/<fold>.csv`
+
+**Testing specific models:**
+```sh
+python3 test_all_models_predictions.py --models resnet-ring1-hr-all-ir inception-time-ring1-hr-all-irred
+```
+
+This is particularly useful for paper reproduction and detailed performance analysis across subjects and scenarios.
+
+
 ##  🧱 Contributing
 We welcome contributions to RingTool! If you have suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
 

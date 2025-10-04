@@ -59,7 +59,7 @@ def welch_spectrum(x, fs, window='hann', nperseg=None, noverlap=None, nfft=None,
     
     # Use appropriate nfft
     if nfft is None:
-        nfft = max(256, 2 ** int(np.log2(len(x))))
+        nfft = np.maximum(256, 2 ** int(np.log2(len(x))))
     
     try:
         f, Pxx = welch(x, fs, window=window, nperseg=nperseg, noverlap=noverlap, nfft=nfft)
