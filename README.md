@@ -2,13 +2,13 @@
   <img src="figures/RingTool-logo.png" alt="RingTool Logo" width="50%">
 </div>
 
-# 💍 RingTool
+# 💍 RingTool (HealthRing Dataset, [Scientific Data](https://www.nature.com/articles/s41597-026-07289-x))
 RingTool is an open platform for health sensing and data analysis with smart rings. It processes raw **PPG** and **IMU** signals from ring sensors to estimate cardiovascular parameters (HR, RR, SpO2, BP). It offers configurable modules for data preprocessing, physics-based algorithms, supervised learning models (**ResNet**, **InceptionTime**, **Transformer**, **Mamba**), and systematic evaluation. The platform is designed to be flexible and extensible, allowing the community to build custom solutions for a wide range of health and wellness applications.
 
 ![RingTool System Overview](figures/structure.jpg)
 
 ## 🗃️ Dataset
-> The complete dataset will be released upon acceptance of our paper.
+HealthRing Dataset link: [https://zenodo.org/records/18426864](https://zenodo.org/records/18426864)
 
 ### Visualization
 Visualization of the ring signal and corresponding medical ground truth. Below is an example of the reflective ring (Ring 1)'s visualizations of the raw data for different activities. For more samples, please refer to the [visualizations](visualizations) folder.
@@ -258,3 +258,17 @@ MODEL_CLASSES = {
 ```
 3. Add logic to the [`main.py`](main.py) to use the model in the following training and evaluation process.
 4. Add the model to the configuration files in the [`config`](config) directory. You can refer to the existing models for examples.
+
+## 📄 Citation
+Title: [HealthRing: Physiology Dataset for Health Sensing on Rings](https://www.nature.com/articles/s41597-026-07289-x)  
+Jiankai Tang, Kegang Wang, Yingke Ding, Jiatong Ji, Yi Wang, Zeyu Wang, Xiyuxing Zhang, Ping Chen, Nan Gao, Yuanchun Shi and Yuntao Wang, "HealthRing: Physiology Dataset for Health Sensing on Rings", Sci Data (2026). https://doi.org/10.1038/s41597-026-07289-x
+```
+@article{tang2026healthring,
+  title={HealthRing: Physiology Dataset for Health Sensing on Rings},
+  author={Tang, Jiankai and Wang, Kegang and Ding, Yingke and Ji, Jiatong and Wang, Yi and Wang, Zeyu and Zhang, Xiyuxing and Chen, Ping and Gao, Nan and Shi, Yuanchun and others},
+  journal={Scientific Data},
+  year={2026},
+  publisher={Nature Publishing Group}
+}
+```
+
